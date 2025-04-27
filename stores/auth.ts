@@ -1,16 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-}
-
-interface AuthState {
-  token: string | null;
-  user: User | null;
-}
+import type { AuthState, User } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
@@ -20,9 +9,6 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.token,
-    isAdmin: (state) => state.user?.roles.includes('ADMIN') || false,
-    isProducer: (state) => state.user?.roles.includes('PRODUCTOR') || false,
-    hasRole: (state) => (role: string) => state.user?.roles.includes(role) || false
   },
 
   actions: {

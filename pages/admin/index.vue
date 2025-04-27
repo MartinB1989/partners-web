@@ -75,16 +75,16 @@
 
 <script setup lang="ts">
 import { useAlertStore } from '~/stores/alert'
-import { useAuthService } from '~/services/auth.services'
 import { useAuthStore } from '~/stores/auth'
-
+import { authService } from '~/services/auth.services'
+import type { LoginResponse } from '~/types/auth'
 // Redirigir si ya está autenticado
 const authStore = useAuthStore()
 const router = useRouter()
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    router.push('/admin/dashboard')
+    router.push('/admin/panel')
   }
 })
 
@@ -92,7 +92,6 @@ definePageMeta({
   layout: 'clean'
 })
 
-const authService = useAuthService()
 const alertStore = useAlertStore()
 const form = ref()
 const isFormValid = ref(false)
@@ -114,24 +113,19 @@ const handleLogin = async () => {
   
   isLoading.value = true
   try {
-    await authService.login({
-      email: email.value,
-      password: password.value
-    })
-    
-    // Verificar si el usuario tiene el rol de administrador
-    if (authStore.isAdmin) {
-      alertStore.showAlert('Inicio de sesión exitoso', 'success')
-      router.push('/admin/panel')
+    const {data, error} = await authService.adminLogin(email.value, password.value) as {data: LoginResponse, error: string}
+    if (error) {
+      alertStore.showAlert(error, 'error')
+      console.log(error)
     } else {
-      // Si el usuario no es administrador, cerrar sesión y mostrar error
-      authStore.logout()
-      alertStore.showAlert('No tienes permisos para acceder al panel de administración', 'error')
-    }
+        console.log(data)
+        authStore.setToken(data.token)
+        authStore.setUser(data.user)
+        alertStore.showAlert('Inicio de sesión exitoso', 'success')
+        router.push('/admin/panel')
+      }
   } catch (error: unknown) {
     console.error('Error al iniciar sesión:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión. Verifica tus credenciales.'
-    alertStore.showAlert(errorMessage, 'error')
   } finally {
     isLoading.value = false
   }
