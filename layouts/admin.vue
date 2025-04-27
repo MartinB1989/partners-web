@@ -19,7 +19,17 @@
       <!-- Nombre de usuario en la barra superior -->
       <v-btn variant="text" color="white">
         <v-icon class="mr-2">mdi-account</v-icon>
-        <span>Nombre Usuario</span>
+        <span>{{ authStore.user?.name || 'Usuario' }}</span>
+      </v-btn>
+      
+      <!-- Botón de cerrar sesión -->
+      <v-btn 
+        variant="text" 
+        color="white" 
+        prepend-icon="mdi-logout"
+        @click="handleLogout"
+      >
+        Cerrar Sesión
       </v-btn>
     </v-app-bar>
 
@@ -93,7 +103,12 @@
 
 <script setup lang="ts">
 import { useAlertStore } from '~/stores/alert'
+import { useAuthStore } from '~/stores/auth'
+import { useRouter } from 'vue-router'
+
 const alertStore = useAlertStore()
+const authStore = useAuthStore()
+const router = useRouter()
 const drawer = ref(false);
 
 // Elementos del menú de navegación
@@ -105,6 +120,15 @@ const menuItems = ref([
   { title: 'Configuración', icon: 'mdi-cog', to: '/admin/configuracion' },
 ]);
 
+// Función para cerrar sesión
+const handleLogout = () => {
+  authStore.logout()
+  alertStore.showAlert(
+    'Has cerrado sesión correctamente', 
+    'success'
+  )
+  router.push('/admin')
+}
 
 const getAlertIcon = (type: 'success' | 'error' | 'warning' | 'info') => {
   switch (type) {

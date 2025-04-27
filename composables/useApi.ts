@@ -72,12 +72,6 @@ export function useApi() {
       }
     }
     
-    // Manejar caso especial de error 401 (no autorizado)
-    if (statusCode === 401) {
-      authStore.logout() // Cerrar sesión si el token no es válido
-      navigateTo('/login') // Redirigir al login
-    }
-    
     // Crear un objeto de error estructurado para que nuestro manejador lo procese
     const apiError: ApiError = {
       error: true,

@@ -125,7 +125,7 @@ const handleLogin = async () => {
       router.push('/admin/panel')
     } else {
       // Si el usuario no es administrador, cerrar sesión y mostrar error
-      authService.logout()
+      authStore.logout()
       alertStore.showAlert('No tienes permisos para acceder al panel de administración', 'error')
     }
   } catch (error: unknown) {
