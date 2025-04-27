@@ -1,27 +1,101 @@
 // web/composables/useApi.ts
 import { useAuthStore } from '../stores/auth'
+import type { ApiError } from './useErrorHandler';
+import { useErrorHandler } from './useErrorHandler'
+
+// Interfaz que representa la estructura de error del backend
+interface ApiErrorResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  error: Record<string, unknown>;
+  timestamp: string;
+  path: string;
+}
+
+// Interfaz para los errores de validación
+interface ValidationError {
+  field: string;
+  message: string;
+  [key: string]: unknown;
+}
 
 export function useApi() {
   const config = useRuntimeConfig()
   const baseURL = config.public.apiBase
+  const { handleApiError } = useErrorHandler()
+  const authStore = useAuthStore()
   
   // Función para manejar errores de forma centralizada
-  const handleError = (error: unknown) => {
-    // Aquí puedes implementar tu lógica de manejo de errores
+  const handleError = (error: unknown): ApiError => {
     console.error('Error en la API:', error)
     
-    // También podrías usar una store para el manejo de errores globales
-    // const alertStore = useAlertStore()
-    // alertStore.showAlert('error', 'Error en la solicitud')
+    let mensaje = 'Error en la conexión con el servidor'
+    let statusCode = 500
+    let validationErrors: Record<string, string[]> | undefined
     
-    throw error
+    // Extraer información útil del error según el formato de la API
+    if (error && typeof error === 'object' && 'response' in error) {
+      const responseError = error.response as { 
+        _data?: ApiErrorResponse, 
+        status?: number 
+      }
+      
+      // Obtener el código de estado directamente de la respuesta si está disponible
+      statusCode = responseError.status || 500
+      
+      if (responseError && responseError._data) {
+        const { _data } = responseError
+        mensaje = _data.message || mensaje
+        statusCode = _data.statusCode || statusCode
+        
+        // Extraer errores de validación si existen
+        if (_data.error && typeof _data.error === 'object') {
+          // Si hay información detallada de validación, formatearla para nuestro manejador
+          if ('errors' in _data.error && Array.isArray(_data.error.errors)) {
+            validationErrors = {};
+            
+            // Convertir el formato del backend a nuestro formato de frontend
+            (_data.error.errors as ValidationError[]).forEach((err) => {
+              if (err.field && err.message) {
+                if (!validationErrors![err.field]) {
+                  validationErrors![err.field] = [];
+                }
+                validationErrors![err.field].push(err.message);
+              }
+            });
+          }
+          
+          // Log adicional para información detallada del error
+          console.error('Detalles del error:', _data.error)
+        }
+      }
+    }
+    
+    // Manejar caso especial de error 401 (no autorizado)
+    if (statusCode === 401) {
+      authStore.logout() // Cerrar sesión si el token no es válido
+      navigateTo('/login') // Redirigir al login
+    }
+    
+    // Crear un objeto de error estructurado para que nuestro manejador lo procese
+    const apiError: ApiError = {
+      error: true,
+      mensaje,
+      statusCode,
+      ...(validationErrors && { validationErrors })
+    }
+    
+    // Usar nuestro manejador especializado para mostrar el error apropiadamente
+    handleApiError(apiError)
+    
+    return apiError
   }
   
   // Función para obtener el token de autenticación
   const getAuthToken = (): string | null => {
     // Verificar si estamos en el cliente (browser)
     if (typeof window !== 'undefined') {
-      const authStore = useAuthStore()
       return authStore.token
     }
     return null
@@ -53,15 +127,14 @@ export function useApi() {
         headers['Authorization'] = `Bearer ${token}`
       }
       
-      const data = await $fetch<T>(`${baseURL}${endpoint}`, {
+      const response = await $fetch<T>(`${baseURL}${endpoint}`, {
         ...options,
         headers,
-        // Se puede añadir aquí manejo de tokens de autenticación si es necesario
       })
       
-      return { data }
+      return { data: response, error: null }
     } catch (err) {
-      return handleError(err)
+      return { data: null, error: handleError(err) }
     }
   }
   

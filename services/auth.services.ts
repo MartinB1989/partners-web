@@ -86,6 +86,7 @@ export const useAuthService = () => {
    */
   const login = async (credentials: LoginData) => {
     const response = await api.post<LoginResponse>(`${authEndpoint}/login`, credentials)
+    console.log(response)
     if (response.data) {
       if (response.data.token) {
         saveToken(response.data.token)
