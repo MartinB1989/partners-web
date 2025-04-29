@@ -76,11 +76,12 @@
 <script setup lang="ts">
 import { useAlertStore } from '~/stores/alert'
 import { useAuthStore } from '~/stores/auth'
-import { authService } from '~/services/auth.services'
-import type { LoginResponse } from '~/types/auth'
+import { useAuth } from '~/composables/services/useAuth'
+
 // Redirigir si ya está autenticado
 const authStore = useAuthStore()
 const router = useRouter()
+const { adminLogin } = useAuth()
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
@@ -113,11 +114,11 @@ const handleLogin = async () => {
   
   isLoading.value = true
   try {
-    const {data, error} = await authService.adminLogin(email.value, password.value) as {data: LoginResponse, error: string}
+    const {data, error} = await adminLogin(email.value, password.value)
     if (error) {
       alertStore.showAlert(error, 'error')
       console.log(error)
-    } else {
+    } else if (data) {
         console.log(data)
         authStore.setToken(data.token)
         authStore.setUser(data.user)

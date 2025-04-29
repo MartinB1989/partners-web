@@ -1,6 +1,6 @@
 <template>
   <GridNavCards
-    title="Panel de administración"
+    title="Productos"
     :cards="cards"
   />
 </template>
@@ -14,29 +14,19 @@ definePageMeta({
 
 const cards = [
   {
-    to: '/admin/usuarios',
-    icon: 'mdi-account-group',
-    title: 'Usuarios'
+    to: '/admin/panel',
+    icon: 'mdi-home',
+    title: 'Panel'
   },
   {
-    to: '/admin/products',
+    to: '/admin/products/my-products',
     icon: 'mdi-package-variant-closed',
-    title: 'Productos'
+    title: 'Mis productos'
   },
   {
-    to: '/admin/ventas',
-    icon: 'mdi-cart',
-    title: 'Ventas'
-  },
-  {
-    to: '/admin/configuracion',
-    icon: 'mdi-cog',
-    title: 'Configuración'
-  },
-  {
-    to: '/admin/reportes',
-    icon: 'mdi-chart-bar',
-    title: 'Reportes'
+    to: '/admin/products/new-product',
+    icon: 'mdi-plus',
+    title: 'Nuevo producto'
   }
 ]
 </script>

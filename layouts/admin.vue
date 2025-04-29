@@ -113,8 +113,8 @@ const drawer = ref(false);
 
 // Elementos del menú de navegación
 const menuItems = ref([
-  { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/admin' },
-  { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/admin/productos' },
+  { title: 'Panel', icon: 'mdi-view-dashboard', to: '/admin/panel' },
+  { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/admin/products' },
   { title: 'Ventas', icon: 'mdi-currency-usd', to: '/admin/ventas' },
   { title: 'Usuarios', icon: 'mdi-account-group', to: '/admin/usuarios' },
   { title: 'Configuración', icon: 'mdi-cog', to: '/admin/configuracion' },
