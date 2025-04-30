@@ -1,21 +1,37 @@
 import { useRuntimeConfig } from '#app'
 import type { ApiError, ApiResponse, RequestResult } from '~/types/api-response'
+import { useAuthStore } from '~/stores/auth'
 
 export const useApi = () => {
   const config = useRuntimeConfig()
   const baseURL = config.public.apiBase
+  const authStore = useAuthStore()
 
   const request = async <T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
-    body?: Record<string, unknown>,
-    options = {}
+    body?: Record<string, unknown> | BodyInit,
+    options: {
+      headers?: Record<string, string>;
+      [key: string]: unknown;
+    } = {}
   ): Promise<RequestResult<T>> => {
     try {
+      // Preparar las opciones de la petición
+      const requestOptions = { ...options }
+      
+      // Añadir el token de autenticación si existe
+      if (authStore.isAuthenticated && authStore.token) {
+        requestOptions.headers = {
+          ...requestOptions.headers,
+          Authorization: `Bearer ${authStore.token}`
+        }
+      }
+
       const response = await $fetch<ApiResponse<T>>(`${baseURL}${endpoint}`, {
         method,
         body,
-        ...options
+        ...requestOptions
       })
 
       // Si la petición fue exitosa, devolvemos los datos y error null
