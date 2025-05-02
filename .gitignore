@@ -6,6 +6,8 @@
 .cache
 dist
 
+promp-base.txt
+
 # Node dependencies
 node_modules
 

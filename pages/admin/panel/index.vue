@@ -34,9 +34,9 @@ const cards = [
     title: 'Configuración'
   },
   {
-    to: '/admin/reportes',
-    icon: 'mdi-chart-bar',
-    title: 'Reportes'
+    to: '/admin/affiliate',
+    icon: 'mdi-account-group',
+    title: 'Vendedores'
   }
 ]
 </script>

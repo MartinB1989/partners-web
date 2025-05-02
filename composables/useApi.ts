@@ -7,10 +7,11 @@ export const useApi = () => {
   const baseURL = config.public.apiBase
   const authStore = useAuthStore()
 
-  const request = async <T>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const request = async <T, B extends BodyInit | Record<string, any> | null = any>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     endpoint: string,
-    body?: Record<string, unknown> | BodyInit,
+    body?: B,
     options: {
       headers?: Record<string, string>;
       [key: string]: unknown;
