@@ -14,29 +14,9 @@ definePageMeta({
 
 const cards = [
   {
-    to: '/admin/usuarios',
-    icon: 'mdi-account-group',
-    title: 'Usuarios'
-  },
-  {
     to: '/admin/products',
     icon: 'mdi-package-variant-closed',
     title: 'Productos'
-  },
-  {
-    to: '/admin/ventas',
-    icon: 'mdi-cart',
-    title: 'Ventas'
-  },
-  {
-    to: '/admin/configuracion',
-    icon: 'mdi-cog',
-    title: 'Configuración'
-  },
-  {
-    to: '/admin/affiliate',
-    icon: 'mdi-account-group',
-    title: 'Vendedores'
   }
 ]
 </script>

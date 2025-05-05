@@ -48,7 +48,7 @@
         </v-card>
       </div>
       
-      <ProductImages
+      <ProductImagesUploader
         v-else
         :product-data="product"
         @back="currentStep = '1'"
@@ -66,7 +66,7 @@ import { useProducts } from '~/composables/services/useProducts'
 import { useAlertStore } from '~/stores/alert'
 import { useProductImages } from '~/composables/useProductImage'
 import ProductForm from '~/components/admin/products/ProductForm.vue'
-import ProductImages from '~/components/admin/products/ProductImages.vue'
+import ProductImagesUploader from '~/components/admin/products/ProductImagesUploader.vue'
 
 definePageMeta({
   layout: 'admin'

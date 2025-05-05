@@ -31,6 +31,16 @@ export const useProducts = () => {
     return { data, error }
   }
 
+  const getMyProducts = async () => {
+    const { data, error } = await api.request('GET', '/products/my-products?limit=0&page=1')
+    return { data, error }
+  }
+
+  const getProductById = async (productId: string) => {
+    const { data, error } = await api.request('GET', `/products/${productId}`)
+    return { data, error }
+  }
+
   // Obtener URL prefirmada para subir imagen
   const getPresignedUrl = async (request: PresignedUrlRequest) => {
     const { data, error } = await api.request<PresignedUrlResponse, PresignedUrlRequest>(
@@ -111,6 +121,8 @@ export const useProducts = () => {
 
   return {
     createProduct,
+    getMyProducts,
+    getProductById,
     getPresignedUrl,
     uploadImageToS3,
     registerProductImage,

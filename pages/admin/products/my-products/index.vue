@@ -41,10 +41,11 @@
 </template>
 
 <script setup lang="ts">
-
+import { useProducts } from '~/composables/services/useProducts'
 definePageMeta({
   layout: 'admin',
 })
+
 
 interface Product {
   id: string
@@ -59,6 +60,8 @@ interface TableHeader {
   key: string
   sortable?: boolean
 }
+
+const { getMyProducts } = useProducts()
 
 const headers: TableHeader[] = [
   { title: 'Título', key: 'title' },
@@ -75,8 +78,13 @@ const loading = ref<boolean>(false)
 const loadProducts = async (): Promise<void> => {
   loading.value = true
   try {
-    // Aquí iría la llamada a la API para obtener los productos
-    // products.value = await $fetch<Product[]>('/api/products')
+    const { data, error } = await getMyProducts()
+    if (error) {
+      console.error('Error al cargar productos:', error)
+    } else {
+      console.log(data)
+      products.value = data.data
+    }
   } catch (error) {
     console.error('Error al cargar productos:', error)
   } finally {
@@ -87,7 +95,7 @@ const loadProducts = async (): Promise<void> => {
 // Función para editar un producto
 const editProduct = (product: Product): void => {
   // Navegar a la página de edición
-  navigateTo(`/admin/products/${product.id}`)
+  navigateTo(`/admin/products/edit/${product.id}`)
 }
 
 // Función para eliminar un producto
@@ -96,6 +104,7 @@ const deleteProduct = async (product: Product): Promise<void> => {
     try {
       // Aquí iría la llamada a la API para eliminar el producto
       // await $fetch(`/api/products/${product.id}`, { method: 'DELETE' })
+      console.log(product)
       await loadProducts()
     } catch (error) {
       console.error('Error al eliminar producto:', error)

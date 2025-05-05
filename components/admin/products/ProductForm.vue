@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex justify-center">
-    <v-card class="pa-4 mb-4 w-100" max-width="800">
+    <v-card class="pa-4 mb-4 w-100" max-width="1200">
       <v-card-text>
         <v-text-field
           v-model="productData.title"
@@ -56,6 +56,7 @@
       <v-card-actions>
         <v-spacer/>
         <v-btn
+          v-if="!hideCancelButton"
           color="error"
           variant="text"
           @click="$emit('cancel')"
@@ -68,7 +69,7 @@
           :disabled="!isFormValid"
           @click="continuar"
         >
-          Continuar
+          {{ submitButtonText }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -88,6 +89,14 @@ const props = defineProps({
       stock: 0,
       active: true
     })
+  },
+  hideCancelButton: {
+    type: Boolean,
+    default: false
+  },
+  submitButtonText: {
+    type: String,
+    default: 'Continuar'
   }
 })
 

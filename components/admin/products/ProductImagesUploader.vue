@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex justify-center">
-    <v-card class="pa-4 mb-4 w-100" max-width="800">
+    <v-card class="pa-4 mb-4 w-100" max-width="1200">
       <v-card-text>
         <p class="text-h6 mb-4">Subir imágenes del producto</p>
         
@@ -92,6 +92,7 @@
       
       <v-card-actions>
         <v-btn
+          v-if="!hideBackButton"
           color="secondary"
           variant="outlined"
           @click="$emit('back')"
@@ -102,6 +103,7 @@
         <v-spacer/>
         
         <v-btn
+          v-if="!hideCancelButton"
           color="error"
           variant="text"
           @click="$emit('cancel')"
@@ -115,7 +117,7 @@
           :disabled="loading"
           @click="submitImages"
         >
-          {{ loading ? 'Guardando...' : 'Guardar producto' }}
+          {{ loading ? 'Guardando...' : submitButtonText }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -129,6 +131,18 @@ const props = defineProps({
   productData: {
     type: Object,
     required: true
+  },
+  hideBackButton: {
+    type: Boolean,
+    default: false
+  },
+  hideCancelButton: {
+    type: Boolean,
+    default: false
+  },
+  submitButtonText: {
+    type: String,
+    default: 'Guardar producto'
   }
 })
 
