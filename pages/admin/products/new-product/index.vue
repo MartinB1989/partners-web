@@ -1,98 +1,61 @@
 <template>
   <v-container>
-    <h1 class="text-h4 mb-6">Nuevo producto</h1>
-    <v-form @submit.prevent="submitProduct">
-      <v-card class="pa-4 mb-4" max-width="600">
-        <v-card-text>
-          <v-text-field
-            v-model="product.title"
-            label="Título"
-            required
-            variant="outlined"
-            class="mb-4"
-            :rules="[v => !!v || 'El título es requerido']"
-          />
+    <h1 class="text-h4 mb-6 text-center">Nuevo producto</h1>
+    
+    <div class="d-flex justify-center mb-6">
+      <v-stepper v-model="currentStep" class="w-100" max-width="800">
+        <v-stepper-header>
+          <v-stepper-item value="1">
+            Detalles del producto
+          </v-stepper-item>
           
-          <v-textarea
-            v-model="product.description"
-            label="Descripción"
-            rows="4"
-            required
-            variant="outlined"
-            class="mb-4"
-            :rules="[v => !!v || 'La descripción es requerida']"
-          />
+          <v-divider/>
           
-          <v-text-field
-            v-model.number="product.price"
-            label="Precio"
-            type="number"
-            min="0"
-            step="0.01"
-            prefix="$"
-            required
-            variant="outlined"
-            class="mb-4"
-            :rules="[v => !!v || 'El precio es requerido']"
-          />
-          
-          <v-text-field
-            v-model.number="product.stock"
-            label="Stock"
-            type="number"
-            min="0"
-            required
-            variant="outlined"
-            class="mb-4"
-            :rules="[v => !!v || 'El stock es requerido']"
-          />
-          
-          <v-switch
-            v-model="product.active"
-            label="Producto activo"
-            color="success"
-            class="mt-2"
-          />
-        </v-card-text>
-        
-        <v-card-actions>
-          <v-spacer/>
-          <v-btn
-            color="error"
-            variant="text"
-            @click="$router.push('/admin/products')"
-          >
-            Cancelar
-          </v-btn>
-          
-          <v-btn
-            color="primary"
-            type="submit"
-            :loading="loading"
-            :disabled="loading"
-          >
-            {{ loading ? 'Guardando...' : 'Guardar producto' }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-form>
+          <v-stepper-item value="2">
+            Imágenes
+          </v-stepper-item>
+        </v-stepper-header>
+      </v-stepper>
+    </div>
+    
+    <!-- Paso 1: Formulario del producto -->
+    <div v-if="currentStep === '1'">
+      <ProductForm 
+        :initial-data="product"
+        @cancel="$router.push('/admin/products')"
+        @continue="handleContinue"
+      />
+    </div>
+    
+    <!-- Paso 2: Carga de imágenes -->
+    <div v-else-if="currentStep === '2'">
+      <ProductImages
+        :product-data="product"
+        @back="currentStep = '1'"
+        @cancel="$router.push('/admin/products')"
+        @save="handleSave"
+      />
+    </div>
   </v-container>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useProducts } from '~/composables/services/useProducts'
+// import { useProducts } from '~/composables/services/useProducts'
 import { useAlertStore } from '~/stores/alert'
+import ProductForm from '~/components/admin/products/ProductForm.vue'
+import ProductImages from '~/components/admin/products/ProductImages.vue'
 
 definePageMeta({
   layout: 'admin'
 })
 
 const router = useRouter()
-const { createProduct } = useProducts()
+// const { createProduct } = useProducts()
 const alertStore = useAlertStore()
 
+const currentStep = ref('1')
 const product = ref({
   title: '',
   description: '',
@@ -103,17 +66,34 @@ const product = ref({
 
 const loading = ref(false)
 
-const submitProduct = async () => {
+const handleContinue = (productData) => {
+  // Actualizar los datos del producto con los datos del formulario
+  product.value = { ...productData }
+  // Avanzar al siguiente paso
+  currentStep.value = '2'
+}
+
+const handleSave = async (imagesData) => {
   loading.value = true
   
   try {
-    const { data, error } = await createProduct(product.value)
+    // Paso 1: Crear el producto y obtener su ID
+    // const { data, error } = await createProduct(product.value)
     
-    if (error) {
-      alertStore.showAlert(error, 'error')
-      return
+    // if (error) {
+    //   alertStore.showAlert(error, 'error')
+    //   return
+    // }
+
+    if (imagesData && imagesData.length > 0) {
+      console.log('Producto creado:', product.value)
+      console.log('Imágenes a procesar:', imagesData)
+      
+      // Aquí se procesarían las imágenes usando el ID del producto: data.id
+      // Por ejemplo:
+      // await uploadProductImages(data.id, imagesData)
     }
-    console.log(data)
+    
     alertStore.showAlert('Producto creado correctamente', 'success')
     setTimeout(() => {
       router.push('/admin/products')
