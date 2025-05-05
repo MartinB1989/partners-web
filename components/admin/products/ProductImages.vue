@@ -26,7 +26,11 @@
             md="4"
             lg="3"
           >
-            <v-card class="mx-auto" height="200">
+            <v-card 
+              class="mx-auto" 
+              height="200"
+              :class="{ 'main-image-card': mainImageIndex === index }"
+            >
               <div class="d-flex justify-center align-center h-100 position-relative">
                 <img
                   :src="preview.url"
@@ -43,6 +47,28 @@
                 >
                   <v-icon>mdi-close</v-icon>
                 </v-btn>
+                
+                <v-btn
+                  icon
+                  size="small"
+                  :color="mainImageIndex === index ? 'amber-darken-2' : 'grey'"
+                  class="position-absolute"
+                  style="top: 5px; left: 5px;"
+                  :title="mainImageIndex === index ? 'Imagen principal' : 'Establecer como principal'"
+                  @click="setMainImage(index)"
+                >
+                  <v-icon>mdi-star</v-icon>
+                </v-btn>
+                
+                <v-chip
+                  v-if="mainImageIndex === index"
+                  color="amber-darken-2"
+                  size="small"
+                  class="position-absolute"
+                  style="bottom: 5px; left: 5px;"
+                >
+                  Principal
+                </v-chip>
               </div>
               <v-card-text class="text-caption text-truncate">
                 {{ images[index].name }}
@@ -112,6 +138,7 @@ const images = ref([])
 const imagePreviews = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
+const mainImageIndex = ref(0) // Por defecto, la primera imagen es la principal
 
 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const maxFileSize = 5 * 1024 * 1024 // 5MB
@@ -165,6 +192,21 @@ const removeImage = (index) => {
     const newPreviews = [...imagePreviews.value]
     newPreviews.splice(index, 1)
     imagePreviews.value = newPreviews
+    
+    // Si se eliminó la imagen principal, actualizamos el índice
+    if (mainImageIndex.value === index) {
+      if (newImages.length > 0) {
+        // Si hay más imágenes, la primera pasa a ser la principal
+        mainImageIndex.value = 0
+      } else {
+        // Si no quedan imágenes, reiniciamos el índice
+        mainImageIndex.value = 0
+      }
+    } else if (mainImageIndex.value > index) {
+      // Si se eliminó una imagen antes de la principal, 
+      // debemos decrementar el índice principal
+      mainImageIndex.value--
+    }
   }
 }
 
@@ -172,12 +214,19 @@ const getFileExtension = (filename) => {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2)
 }
 
+const setMainImage = (index) => {
+  if (index >= 0 && index < images.value.length) {
+    mainImageIndex.value = index
+  }
+}
+
 const submitImages = () => {
   if (images.value && images.value.length > 0) {
-    const imagesData = images.value.map(file => ({
+    const imagesData = images.value.map((file, index) => ({
       file,
       contentType: file.type,
-      fileExtension: getFileExtension(file.name).toLowerCase()
+      fileExtension: getFileExtension(file.name).toLowerCase(),
+      main: index === mainImageIndex.value // Establecer main=true solo para la imagen principal
     }))
     
     console.log('Datos del producto completo:', {
@@ -197,8 +246,16 @@ const addImages = (newFiles) => {
   if (!newFiles || newFiles.length === 0) return
   
   const currentFiles = images.value || []
+  const wasEmpty = currentFiles.length === 0
+  
+  // Convertimos a array y concatenamos con los archivos existentes
   const filesToAdd = Array.from(newFiles)
   images.value = [...currentFiles, ...filesToAdd]
+  
+  // Si no había imágenes previamente, la primera nueva imagen será la principal
+  if (wasEmpty && filesToAdd.length > 0) {
+    mainImageIndex.value = 0
+  }
   
   generatePreviews()
 }
@@ -230,5 +287,10 @@ watch(images, (newVal) => {
 
 .position-absolute {
   position: absolute;
+}
+
+.main-image-card {
+  border: 2px solid #FF8F00;
+  box-shadow: 0 0 8px rgba(255, 143, 0, 0.6);
 }
 </style> 

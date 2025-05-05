@@ -95,9 +95,9 @@ const handleSave = async (imagesData) => {
     }
     
     alertStore.showAlert('Producto creado correctamente', 'success')
-    setTimeout(() => {
-      router.push('/admin/products')
-    }, 1500)
+    // setTimeout(() => {
+    //   router.push('/admin/products')
+    // }, 1500)
   } catch (err) {
     alertStore.showAlert(err.message || 'Error inesperado', 'error')
   } finally {
