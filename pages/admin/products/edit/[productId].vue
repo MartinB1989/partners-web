@@ -35,6 +35,24 @@
         @cancel="$router.push('/admin/products')"
       />
 
+      <!-- Indicador de progreso de carga -->
+      <v-card v-if="uploadingImages" class="pa-4 mb-4 w-100 mt-6" max-width="800">
+        <v-card-text class="text-center">
+          <p class="text-h6 mb-4">Subiendo imágenes...</p>
+          <v-progress-linear 
+            :model-value="uploadedImages / totalImages * 100" 
+            height="20" 
+            color="primary" 
+            striped
+          >
+            <template #default>
+              {{ uploadedImages }} de {{ totalImages }}
+            </template>
+          </v-progress-linear>
+          <p class="mt-4">Por favor, no cierres esta página.</p>
+        </v-card-text>
+      </v-card>
+
     </div>
   </v-container>
 </template>
@@ -44,6 +62,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useProducts } from '~/composables/services/useProducts'
 import { useAlertStore } from '~/stores/alert'
+import { useProductImages } from '~/composables/useProductImage'
 import ProductForm from '~/components/admin/products/ProductForm.vue'
 import ProductImagesUploader from '~/components/admin/products/ProductImagesUploader.vue'
 import ProductImagesManager from '~/components/admin/products/ProductImagesManager.vue'
@@ -56,10 +75,13 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const productId = route.params.productId as string
-const { getProductById } = useProducts()
+const { getProductById, updateProduct } = useProducts()
 const alertStore = useAlertStore()
 
 const loading = ref(true)
+const uploadingImages = ref(false)
+const totalImages = ref(0)
+const uploadedImages = ref(0)
 
 const product = ref<Product>({
   title: '',
@@ -93,24 +115,85 @@ const loadProduct = async () => {
   }
 }
 
-const handleFormContinue = (productData) => {
+const handleFormContinue = async (productData) => {
   // Actualizar los datos del producto con los datos del formulario
-  product.value = { 
-    ...product.value, 
+  product.value = {
     title: productData.title,
     description: productData.description,
     price: productData.price,
     stock: productData.stock,
     active: productData.active
   }
-  
-  alertStore.showAlert('Datos del producto actualizados', 'success')
+  try {
+    const { data, error } = await updateProduct(productId, product.value)
+    if (error) {
+      alertStore.showAlert('Error al actualizar el producto: ' + error, 'error')
+    } else {
+      console.log(data)
+      alertStore.showAlert('Datos del producto actualizados', 'success')
+    }
+  } catch (error) {
+    alertStore.showAlert('Error al actualizar el producto: ' + error, 'error')
+  }
 }
 
-const handleImagesUpload = (_imagesData) => {
-  // En una implementación real, aquí iría el código para subir las nuevas imágenes
-  // Por ahora solo mostramos un mensaje de simulación
-  alertStore.showAlert('Nuevas imágenes procesadas (simulación)', 'success')
+const handleImagesUpload = async (imagesData) => {
+  if (!imagesData || imagesData.length === 0) {
+    alertStore.showAlert('No hay imágenes para subir', 'info')
+    return
+  }
+  
+  totalImages.value = imagesData.length
+  uploadingImages.value = true
+  
+  try {
+    // Inicializar el composable sin el ID del producto
+    const { uploadMultipleImages, uploadedImages: imagesUploadedRef } = useProductImages()
+    
+    // Preparar los datos para la función de carga múltiple
+    const imagesForUpload = imagesData.map((imgData, index) => ({
+      file: imgData.file,
+      main: imgData.main,
+      order: index
+    }))
+    
+    // Usar la función de carga múltiple pasando el productId como primer argumento
+    const results = await uploadMultipleImages(productId, imagesForUpload)
+    
+    // Sincronizar el estado de progreso con nuestro componente
+    const updateProgress = () => {
+      uploadedImages.value = imagesUploadedRef.value
+    }
+    
+    // Configurar una actualización periódica del progreso
+    const progressInterval = setInterval(updateProgress, 100)
+    
+    // Esperar a que se complete la carga
+    await new Promise(resolve => {
+      const checkCompletion = () => {
+        if (imagesUploadedRef.value >= totalImages.value) {
+          clearInterval(progressInterval)
+          resolve(null)
+        } else {
+          setTimeout(checkCompletion, 100)
+        }
+      }
+      checkCompletion()
+    })
+    
+    const successCount = results.filter(result => result !== null).length
+    alertStore.showAlert(`${successCount} de ${imagesData.length} imágenes subidas correctamente`, 'success')
+    
+    // Recargar el producto para mostrar las nuevas imágenes
+    await loadProduct()
+  } catch (error) {
+    console.error('Error al subir imágenes:', error)
+    alertStore.showAlert('Error al subir imágenes: ' + error, 'error')
+  } finally {
+    uploadingImages.value = false
+    uploadedImages.value = 0
+    totalImages.value = 0
+  }
 }
 
 const handleRemoveImage = ({ imageId }) => {

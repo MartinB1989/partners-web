@@ -10,12 +10,12 @@
             :loading="loading"
             class="elevation-1"
           >
-            <template #[`item.published`]="{ item }">
+            <template #[`item.active`]="{ item }">
               <v-chip
-                :color="item.published ? 'success' : 'error'"
+                :color="item.active ? 'success' : 'error'"
                 size="small"
               >
-                {{ item.published ? 'Publicado' : 'No publicado' }}
+                {{ item.active ? 'Publicado' : 'No publicado' }}
               </v-chip>
             </template>
 
@@ -42,18 +42,10 @@
 
 <script setup lang="ts">
 import { useProducts } from '~/composables/services/useProducts'
+import type { Product } from '~/types/product'
 definePageMeta({
   layout: 'admin',
 })
-
-
-interface Product {
-  id: string
-  title: string
-  price: number
-  stock: number
-  published: boolean
-}
 
 interface TableHeader {
   title: string
@@ -67,7 +59,7 @@ const headers: TableHeader[] = [
   { title: 'Título', key: 'title' },
   { title: 'Precio', key: 'price' },
   { title: 'Stock', key: 'stock' },
-  { title: 'Publicado', key: 'published' },
+  { title: 'Publicado', key: 'active' },
   { title: 'Acciones', key: 'actions', sortable: false },
 ]
 

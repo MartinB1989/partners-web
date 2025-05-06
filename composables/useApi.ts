@@ -9,7 +9,7 @@ export const useApi = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const request = async <T, B extends BodyInit | Record<string, any> | null = any>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
     endpoint: string,
     body?: B,
     options: {

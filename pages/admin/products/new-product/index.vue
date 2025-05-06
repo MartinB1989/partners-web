@@ -51,6 +51,7 @@
       <ProductImagesUploader
         v-else
         :product-data="product"
+        :allow-deselect="false"
         @back="currentStep = '1'"
         @cancel="$router.push('/admin/products')"
         @save="handleSave"
@@ -75,6 +76,8 @@ definePageMeta({
 const router = useRouter()
 const { createProduct } = useProducts()
 const alertStore = useAlertStore()
+// Inicializar el composable una sola vez fuera de las funciones
+const { uploadMultipleImages, uploadedImages: imagesUploadedRef } = useProductImages()
 
 const currentStep = ref('1')
 const product = ref({
@@ -114,29 +117,8 @@ const handleSave = async (imagesData) => {
     // Si hay imágenes para procesar
     if (imagesData && imagesData.length > 0) {
       console.log('Producto creado:', data)
-      totalImages.value = imagesData.length
-      uploadingImages.value = true
-      
-      // Inicializar el composable con el ID del producto
-      const { uploadImage } = useProductImages(productId)
-      
-      // Subir cada imagen y mantener la propiedad main
-      for (let i = 0; i < imagesData.length; i++) {
-        const imgData = imagesData[i]
-        
-        try {
-          await uploadImage(
-            imgData.file,
-            imgData.main, // Pasar el valor main que seleccionó el usuario
-            i // Orden basado en el índice
-          )
-          
-          uploadedImages.value++
-        } catch (uploadErr) {
-          console.error('Error al subir imagen:', uploadErr)
-          // Continuamos con la siguiente imagen aun si una falla
-        }
-      }
+      const uploadResults = await uploadProductImages(productId, imagesData)
+      console.log('Imágenes subidas:', uploadResults.length)
     }
     
     alertStore.showAlert('Producto creado correctamente', 'success')
@@ -150,6 +132,52 @@ const handleSave = async (imagesData) => {
     uploadingImages.value = false
     uploadedImages.value = 0
     totalImages.value = 0
+  }
+}
+
+const uploadProductImages = async (productId, imagesData) => {
+  totalImages.value = imagesData.length
+  uploadingImages.value = true
+  
+  // Actualizar referencias para el seguimiento del progreso
+  totalImages.value = imagesData.length
+  
+  // Preparar los datos para la función de carga múltiple
+  const imagesForUpload = imagesData.map((imgData, index) => ({
+    file: imgData.file,
+    main: imgData.main,
+    order: index
+  }))
+  
+  try {
+    // Usar la función de carga múltiple pasando el productId como primer argumento
+    const results = await uploadMultipleImages(productId, imagesForUpload)
+    
+    // Sincronizar el estado de progreso con nuestro componente
+    const updateProgress = () => {
+      uploadedImages.value = imagesUploadedRef.value
+    }
+    
+    // Configurar una actualización periódica del progreso
+    const progressInterval = setInterval(updateProgress, 100)
+    
+    // Esperar a que se complete la carga
+    await new Promise(resolve => {
+      const checkCompletion = () => {
+        if (imagesUploadedRef.value >= totalImages.value) {
+          clearInterval(progressInterval)
+          resolve(null)
+        } else {
+          setTimeout(checkCompletion, 100)
+        }
+      }
+      checkCompletion()
+    })
+    
+    return results.filter(result => result !== null)
+  } catch (error) {
+    console.error('Error al subir imágenes:', error)
+    return []
   }
 }
 </script>

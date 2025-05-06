@@ -41,6 +41,11 @@ export const useProducts = () => {
     return { data, error }
   }
 
+  const updateProduct = async (productId: string, product: Product) => {
+    const { data, error } = await api.request('PATCH', `/products/${productId}`, product)
+    return { data, error }
+  }
+
   // Obtener URL prefirmada para subir imagen
   const getPresignedUrl = async (request: PresignedUrlRequest) => {
     const { data, error } = await api.request<PresignedUrlResponse, PresignedUrlRequest>(
@@ -123,6 +128,7 @@ export const useProducts = () => {
     createProduct,
     getMyProducts,
     getProductById,
+    updateProduct,
     getPresignedUrl,
     uploadImageToS3,
     registerProductImage,

@@ -54,7 +54,7 @@
                   :color="mainImageIndex === index ? 'amber-darken-2' : 'grey'"
                   class="position-absolute"
                   style="top: 5px; left: 5px;"
-                  :title="mainImageIndex === index ? 'Imagen principal' : 'Establecer como principal'"
+                  :title="mainImageIndex === index ? 'Quitar selección como principal' : 'Establecer como principal'"
                   @click="setMainImage(index)"
                 >
                   <v-icon>mdi-star</v-icon>
@@ -143,6 +143,10 @@ const props = defineProps({
   submitButtonText: {
     type: String,
     default: 'Guardar producto'
+  },
+  allowDeselect: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -230,7 +234,13 @@ const getFileExtension = (filename) => {
 
 const setMainImage = (index) => {
   if (index >= 0 && index < images.value.length) {
-    mainImageIndex.value = index
+    // Si allowDeselect está habilitado y ya era la imagen principal, 
+    // desactivamos la selección estableciendo a -1 (ninguna imagen principal)
+    if (props.allowDeselect && mainImageIndex.value === index) {
+      mainImageIndex.value = -1
+    } else {
+      mainImageIndex.value = index
+    }
   }
 }
 
@@ -240,7 +250,7 @@ const submitImages = () => {
       file,
       contentType: file.type,
       fileExtension: getFileExtension(file.name).toLowerCase(),
-      main: index === mainImageIndex.value // Establecer main=true solo para la imagen principal
+      main: mainImageIndex.value === index // Establecer main=true solo para la imagen principal
     }))
     
     console.log('Datos del producto completo:', {

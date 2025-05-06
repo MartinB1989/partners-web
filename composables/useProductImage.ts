@@ -2,17 +2,19 @@ import { ref } from 'vue'
 import { useProducts } from '~/composables/services/useProducts'
 import { useAlertStore } from '~/stores/alert'
 
-export const useProductImages = (productId?: string) => {
+export const useProductImages = () => {
   const alertStore = useAlertStore()
   const productsService = useProducts()
   
   const isUploading = ref(false)
   const uploadProgress = ref(0)
+  const totalImages = ref(0)
+  const uploadedImages = ref(0)
 
   /**
    * Sube una imagen al producto y la registra
    */
-  const uploadImage = async (file: File, isMain = false, order = 0) => {
+  const uploadImage = async (productId: string, file: File, isMain = false, order = 0) => {
     if (!productId) {
       alertStore.showAlert('Es necesario un ID de producto para subir imágenes', 'error')
       return null
@@ -99,7 +101,7 @@ export const useProductImages = (productId?: string) => {
   /**
    * Elimina una imagen del producto
    */
-  const deleteImage = async (imageId: string) => {
+  const deleteImage = async (productId: string, imageId: string) => {
     if (!productId) {
       alertStore.showAlert('Es necesario un ID de producto para eliminar imágenes', 'error')
       return false
@@ -144,10 +146,60 @@ export const useProductImages = (productId?: string) => {
     }
   }
 
+  /**
+   * Sube múltiples imágenes al producto
+   * @param images Array de objetos con estructura { file: File, main: boolean, order?: number }
+   * @returns Array con los resultados de cada carga
+   */
+  const uploadMultipleImages = async (productId: string, images: Array<{ file: File, main: boolean, order?: number }>) => {
+    if (!productId) {
+      alertStore.showAlert('Es necesario un ID de producto para subir imágenes', 'error')
+      return []
+    }
+    
+    if (!images || images.length === 0) {
+      return []
+    }
+    
+    isUploading.value = true
+    totalImages.value = images.length
+    uploadedImages.value = 0
+    
+    const results = []
+    
+    // Subir cada imagen manteniendo la propiedad main y orden
+    for (let i = 0; i < images.length; i++) {
+      const imgData = images[i]
+      
+      try {
+        const result = await uploadImage(
+          productId,
+          imgData.file,
+          imgData.main,
+          imgData.order !== undefined ? imgData.order : i
+        )
+        
+        uploadedImages.value++
+        results.push(result)
+      } catch (error) {
+        console.error('Error al subir imagen:', error)
+        results.push(null)
+        // Continuamos con la siguiente imagen aunque una falle
+      }
+    }
+    
+    isUploading.value = false
+    
+    return results
+  }
+
   return {
     isUploading,
     uploadProgress,
+    totalImages,
+    uploadedImages,
     uploadImage,
-    deleteImage
+    deleteImage,
+    uploadMultipleImages
   }
 } 

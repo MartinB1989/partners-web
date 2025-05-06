@@ -46,7 +46,7 @@
                   class="position-absolute"
                   style="top: 5px; left: 5px;"
                   :title="image.main ? 'Imagen principal' : 'Establecer como principal'"
-                  @click="handleSetMainImage(image)"
+                  @click="openConfirmModal(image)"
                 >
                   <v-icon>mdi-star</v-icon>
                 </v-btn>
@@ -66,11 +66,30 @@
         </v-row>
       </v-card-text>
     </v-card>
+
+    <!-- Modal de confirmación -->
+    <v-dialog v-model="confirmModal" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6">Confirmar acción</v-card-title>
+        <v-card-text>
+          ¿Está seguro de que desea establecer esta imagen como la imagen principal del producto?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer/>
+          <v-btn color="grey-darken-1" variant="text" @click="confirmModal = false">
+            Cancelar
+          </v-btn>
+          <v-btn color="amber-darken-2" variant="text" @click="confirmSetMainImage">
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { defineProps, defineEmits, ref } from 'vue'
 
 const _props = defineProps({
   productImages: {
@@ -81,6 +100,10 @@ const _props = defineProps({
 
 const emit = defineEmits(['remove-image', 'set-main-image'])
 
+// Variables para el modal de confirmación
+const confirmModal = ref(false)
+const selectedImage = ref(null)
+
 const handleRemoveImage = (image) => {
   // Emite evento al componente padre con el id de la imagen
   emit('remove-image', {
@@ -88,14 +111,24 @@ const handleRemoveImage = (image) => {
   })
 }
 
-const handleSetMainImage = (image) => {
-  // Solo emite si no es ya la imagen principal
+const openConfirmModal = (image) => {
+  // Solo abre el modal si no es ya la imagen principal
   if (!image.main) {
+    selectedImage.value = image
+    confirmModal.value = true
+  }
+}
+
+const confirmSetMainImage = () => {
+  if (selectedImage.value) {
     // Emite evento al componente padre con el id de la imagen y main=true
     emit('set-main-image', {
-      imageId: image.id,
+      imageId: selectedImage.value.id,
       main: true
     })
+    // Cierra el modal
+    confirmModal.value = false
+    selectedImage.value = null
   }
 }
 </script>
