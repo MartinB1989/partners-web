@@ -108,7 +108,7 @@ export const useProducts = () => {
 
   // Obtener URL prefirmada para eliminar imagen
   const getDeleteImageUrl = async (productId: string, imageId: string) => {
-    const { data, error } = await api.request<string, string>(
+    const { data, error } = await api.request<{ deleteUrl: string }, string>(
       'GET',
       `/products/${productId}/images/${imageId}/delete-url`
     )
