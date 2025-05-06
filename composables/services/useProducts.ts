@@ -19,6 +19,15 @@ export interface ProductImageRequest {
   order: number
 }
 
+interface ListResponse {
+  data: Product[]
+  meta: {
+    total: number
+    page: number
+    lastPage: number
+  }
+}
+
 export const useProducts = () => {
   const api = useApi()
 
@@ -29,7 +38,7 @@ export const useProducts = () => {
 
   const getMyProducts = async () => {
     const { data, error } = await api.request('GET', '/products/my-products?limit=0&page=1')
-    return { data, error }
+    return { data, error } as { data: ListResponse, error: string | null }
   }
 
   const getProductById = async (productId: string) => {
@@ -39,6 +48,11 @@ export const useProducts = () => {
 
   const updateProduct = async (productId: string, product: Product) => {
     const { data, error } = await api.request('PATCH', `/products/${productId}`, product)
+    return { data, error }
+  }
+
+  const deleteProduct = async (productId: string) => {
+    const { data, error } = await api.request('DELETE', `/products/${productId}`)
     return { data, error }
   }
 
@@ -145,6 +159,7 @@ export const useProducts = () => {
     getMyProducts,
     getProductById,
     updateProduct,
+    deleteProduct,
     getPresignedUrl,
     uploadImageToS3,
     registerProductImage,

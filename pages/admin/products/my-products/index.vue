@@ -2,7 +2,16 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <h1 class="text-h4 mb-4">Productos</h1>
+        <div class="d-flex justify-space-between align-center mb-4">
+          <h1 class="text-h4">Productos</h1>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            to="/admin/products/new-product"
+          >
+            Crear nuevo producto
+          </v-btn>
+        </div>
         <v-card>
           <v-data-table
             :headers="headers"
@@ -30,22 +39,40 @@
                 icon="mdi-delete"
                 variant="text"
                 color="error"
-                @click="deleteProduct(item)"
+                @click="showDeleteModal(item)"
               />
             </template>
           </v-data-table>
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Modal de confirmación para eliminar producto -->
+    <v-dialog v-model="deleteDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5">Confirmar eliminación</v-card-title>
+        <v-card-text>
+          ¿Estás seguro de que deseas eliminar el producto <strong>{{ productToDelete?.title }}</strong>?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer/>
+          <v-btn color="primary" variant="text" @click="deleteDialog = false">Cancelar</v-btn>
+          <v-btn color="error" variant="text" @click="confirmDelete">Eliminar</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { useProducts } from '~/composables/services/useProducts'
 import type { Product } from '~/types/product'
+import { useAlertStore } from '~/stores/alert'
 definePageMeta({
   layout: 'admin',
 })
+
+const alertStore = useAlertStore()
 
 interface TableHeader {
   title: string
@@ -53,7 +80,7 @@ interface TableHeader {
   sortable?: boolean
 }
 
-const { getMyProducts } = useProducts()
+const { getMyProducts, deleteProduct } = useProducts()
 
 const headers: TableHeader[] = [
   { title: 'Título', key: 'title' },
@@ -65,6 +92,8 @@ const headers: TableHeader[] = [
 
 const products = ref<Product[]>([])
 const loading = ref<boolean>(false)
+const deleteDialog = ref<boolean>(false)
+const productToDelete = ref<Product | null>(null)
 
 // Función para cargar los productos
 const loadProducts = async (): Promise<void> => {
@@ -73,8 +102,8 @@ const loadProducts = async (): Promise<void> => {
     const { data, error } = await getMyProducts()
     if (error) {
       console.error('Error al cargar productos:', error)
+      alertStore.showAlert('Error al cargar productos. Vuelve a cargar la página', 'error')
     } else {
-      console.log(data)
       products.value = data.data
     }
   } catch (error) {
@@ -90,16 +119,32 @@ const editProduct = (product: Product): void => {
   navigateTo(`/admin/products/edit/${product.id}`)
 }
 
-// Función para eliminar un producto
-const deleteProduct = async (product: Product): Promise<void> => {
-  if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+// Función para mostrar el modal de eliminación
+const showDeleteModal = (product: Product): void => {
+  productToDelete.value = product
+  deleteDialog.value = true
+}
+
+// Función para confirmar la eliminación del producto
+const confirmDelete = async (): Promise<void> => {
+  if (productToDelete.value && productToDelete.value.id) {
     try {
-      // Aquí iría la llamada a la API para eliminar el producto
-      // await $fetch(`/api/products/${product.id}`, { method: 'DELETE' })
-      console.log(product)
+      // Llamar a la API para eliminar el producto
+      const { error } = await deleteProduct(productToDelete.value.id)
+      
+      if (error) {
+        console.error('Error al eliminar producto:', error)
+        alertStore.showAlert('Error al eliminar producto', 'error')
+      } else {
+        alertStore.showAlert('Producto eliminado correctamente', 'success')
+      }
+      
+      // Recargar los productos
       await loadProducts()
     } catch (error) {
       console.error('Error al eliminar producto:', error)
+    } finally {
+      deleteDialog.value = false
     }
   }
 }
