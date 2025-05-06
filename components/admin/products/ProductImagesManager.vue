@@ -67,7 +67,7 @@
       </v-card-text>
     </v-card>
 
-    <!-- Modal de confirmación -->
+    <!-- Modal de confirmación para imagen principal -->
     <v-dialog v-model="confirmModal" max-width="400">
       <v-card>
         <v-card-title class="text-h6">Confirmar acción</v-card-title>
@@ -81,6 +81,25 @@
           </v-btn>
           <v-btn color="amber-darken-2" variant="text" @click="confirmSetMainImage">
             Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal de confirmación para eliminar imagen -->
+    <v-dialog v-model="confirmDeleteModal" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6">Confirmar eliminación</v-card-title>
+        <v-card-text>
+          ¿Está seguro de que desea eliminar esta imagen del producto?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer/>
+          <v-btn color="grey-darken-1" variant="text" @click="confirmDeleteModal = false">
+            Cancelar
+          </v-btn>
+          <v-btn color="error" variant="text" @click="confirmRemoveImage">
+            Eliminar
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -100,15 +119,31 @@ const _props = defineProps({
 
 const emit = defineEmits(['remove-image', 'set-main-image'])
 
-// Variables para el modal de confirmación
+// Variables para el modal de confirmación de imagen principal
 const confirmModal = ref(false)
 const selectedImage = ref(null)
 
+// Variables para el modal de confirmación de eliminación
+const confirmDeleteModal = ref(false)
+const imageToDelete = ref(null)
+
 const handleRemoveImage = (image) => {
-  // Emite evento al componente padre con el id de la imagen
-  emit('remove-image', {
-    imageId: image.id
-  })
+  // Ahora abre el modal de confirmación en lugar de emitir directamente
+  imageToDelete.value = image
+  confirmDeleteModal.value = true
+}
+
+// Función para confirmar la eliminación
+const confirmRemoveImage = () => {
+  if (imageToDelete.value) {
+    // Emite evento al componente padre con el id de la imagen
+    emit('remove-image', {
+      imageId: imageToDelete.value.id
+    })
+    // Cierra el modal
+    confirmDeleteModal.value = false
+    imageToDelete.value = null
+  }
 }
 
 const openConfirmModal = (image) => {

@@ -19,10 +19,6 @@ export interface ProductImageRequest {
   order: number
 }
 
-export interface DeleteUrlResponse {
-  deleteUrl: string
-}
-
 export const useProducts = () => {
   const api = useApi()
 
@@ -38,7 +34,7 @@ export const useProducts = () => {
 
   const getProductById = async (productId: string) => {
     const { data, error } = await api.request('GET', `/products/${productId}`)
-    return { data, error }
+    return { data, error } as { data: Product, error: string | null }
   }
 
   const updateProduct = async (productId: string, product: Product) => {
@@ -88,9 +84,17 @@ export const useProducts = () => {
     return { data, error }
   }
 
+  const setMainImage = async (productId: string, imageId: string) => {
+    const { data, error } = await api.request(
+      'PATCH',
+      `/products/${productId}/images/${imageId}/set-main`
+    )
+    return { data, error }
+  }
+
   // Obtener URL prefirmada para eliminar imagen
   const getDeleteImageUrl = async (productId: string, imageId: string) => {
-    const { data, error } = await api.request<DeleteUrlResponse>(
+    const { data, error } = await api.request<string, string>(
       'GET',
       `/products/${productId}/images/${imageId}/delete-url`
     )
@@ -132,6 +136,7 @@ export const useProducts = () => {
     getPresignedUrl,
     uploadImageToS3,
     registerProductImage,
+    setMainImage,
     getDeleteImageUrl,
     deleteImageFromS3,
     deleteProductImage

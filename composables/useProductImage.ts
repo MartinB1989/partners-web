@@ -119,9 +119,7 @@ export const useProductImages = () => {
       }
 
       // Paso 2: Eliminar de S3
-      const { success, error: deleteError } = await productsService.deleteImageFromS3(
-        urlData.deleteUrl
-      )
+      const { success, error: deleteError } = await productsService.deleteImageFromS3(urlData)
 
       if (!success) {
         throw new Error(deleteError || 'Error al eliminar la imagen de S3')

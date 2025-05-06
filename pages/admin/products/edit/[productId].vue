@@ -75,7 +75,8 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const productId = route.params.productId as string
-const { getProductById, updateProduct } = useProducts()
+const { getProductById, updateProduct, setMainImage } = useProducts()
+const { deleteImage } = useProductImages()
 const alertStore = useAlertStore()
 
 const loading = ref(true)
@@ -115,7 +116,7 @@ const loadProduct = async () => {
   }
 }
 
-const handleFormContinue = async (productData) => {
+const handleFormContinue = async (productData: Product) => {
   // Actualizar los datos del producto con los datos del formulario
   product.value = {
     title: productData.title,
@@ -137,7 +138,7 @@ const handleFormContinue = async (productData) => {
   }
 }
 
-const handleImagesUpload = async (imagesData) => {
+const handleImagesUpload = async (imagesData: { file: File, main: boolean, order: number }[]) => {
   if (!imagesData || imagesData.length === 0) {
     alertStore.showAlert('No hay imágenes para subir', 'info')
     return
@@ -196,18 +197,36 @@ const handleImagesUpload = async (imagesData) => {
   }
 }
 
-const handleRemoveImage = ({ imageId }) => {
-  console.log('Eliminar imagen:', imageId)
-  // Aquí iría la lógica real para eliminar la imagen
-  // De momento solo lo simulamos
-  alertStore.showAlert(`Imagen ${imageId} eliminada (simulación)`, 'info')
+const handleRemoveImage = async ({ imageId }: { imageId: string }) => {
+  try {
+    const success = await deleteImage(productId, imageId)
+    
+    if (success) {
+      // Actualizar la lista de imágenes localmente eliminando la imagen
+      if (product.value.images) {
+        product.value.images = product.value.images.filter(img => img.id !== imageId)
+      }
+      alertStore.showAlert('Imagen eliminada correctamente', 'success')
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+    alertStore.showAlert(`Error al eliminar la imagen: ${errorMessage}`, 'error')
+  }
 }
 
-const handleSetMainImage = ({ imageId, main }) => {
+const handleSetMainImage = async ({ imageId, main }: { imageId: string, main: boolean }) => {
   console.log('Establecer imagen principal:', imageId, main)
-  // Aquí iría la lógica real para establecer la imagen principal
-  // De momento lo simulamos actualizando localmente
-  
+  try {
+    const { data, error } = await setMainImage(productId, imageId)
+    if (error) {
+      alertStore.showAlert('Error al establecer la imagen principal: ' + error, 'error')
+    } else {
+      console.log(data)
+      alertStore.showAlert('Imagen principal establecida', 'success')
+    }
+  } catch (error) {
+    alertStore.showAlert('Error al establecer la imagen principal: ' + error, 'error')
+  }
   if (product.value.images) {
     product.value.images = product.value.images.map(img => ({
       ...img,

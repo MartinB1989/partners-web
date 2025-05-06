@@ -4,10 +4,15 @@ export interface Product {
   price: number
   stock: number
   active: boolean
-  images?: {
-    url: string
-    key: string
-    main: boolean
-    order: number
-  }[]
+  id?: string
+  images?: ProductImage[]
 }
+
+export interface ProductImage {
+  url: string
+  key: string
+  main: boolean
+  order: number
+  id?: string
+}
+
