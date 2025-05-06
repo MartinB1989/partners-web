@@ -107,6 +107,11 @@ export const useProductImages = () => {
       return false
     }
 
+    if (!imageId) {
+      alertStore.showAlert('Es necesario un ID de imagen para eliminarla', 'error')
+      return false
+    }
+
     try {
       // Paso 1: Obtener URL para eliminar de S3
       const { data: urlData, error: urlError } = await productsService.getDeleteImageUrl(

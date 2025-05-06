@@ -104,6 +104,18 @@ export const useProducts = () => {
   // Eliminar imagen de S3 usando URL prefirmada
   const deleteImageFromS3 = async (deleteUrl: string) => {
     try {
+      // Validar que la URL existe y es válida
+      if (!deleteUrl) {
+        return { success: false, error: 'URL no proporcionada para eliminar la imagen' }
+      }
+      
+      // Validar que la URL tiene un formato válido
+      try {
+        new URL(deleteUrl)
+      } catch {
+        return { success: false, error: 'URL proporcionada no es válida' }
+      }
+      
       const response = await fetch(deleteUrl, {
         method: 'DELETE'
       })
