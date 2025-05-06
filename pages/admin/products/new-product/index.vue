@@ -1,9 +1,18 @@
 <template>
   <v-container>
-    <h1 class="text-h4 mb-6 text-center">Nuevo producto</h1>
+    <div class="d-flex justify-space-between align-center mb-6">
+      <h1 class="text-h4">Nuevo producto</h1>
+      <v-btn
+        variant="outlined"
+        prepend-icon="mdi-arrow-left"
+        @click="() => router.back()"
+      >
+        Atrás
+      </v-btn>
+    </div>
     
     <div class="d-flex justify-center mb-6">
-      <v-stepper v-model="currentStep" class="w-100" max-width="800">
+      <v-stepper v-model="currentStep" class="w-100" max-width="1200">
         <v-stepper-header>
           <v-stepper-item value="1">
             Detalles del producto

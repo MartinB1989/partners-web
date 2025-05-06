@@ -4,13 +4,23 @@
       <v-col cols="12">
         <div class="d-flex justify-space-between align-center mb-4">
           <h1 class="text-h4">Productos</h1>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            to="/admin/products/new-product"
-          >
-            Crear nuevo producto
-          </v-btn>
+          <div>
+            <v-btn
+              variant="outlined"
+              class="mr-2"
+              prepend-icon="mdi-arrow-left"
+              @click="() => router.back()"
+            >
+              Atrás
+            </v-btn>
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-plus"
+              to="/admin/products/new-product"
+            >
+              Crear nuevo producto
+            </v-btn>
+          </div>
         </div>
         <v-card>
           <v-data-table
@@ -68,11 +78,11 @@
 import { useProducts } from '~/composables/services/useProducts'
 import type { Product } from '~/types/product'
 import { useAlertStore } from '~/stores/alert'
+import { useRouter } from 'vue-router'
+
 definePageMeta({
   layout: 'admin',
 })
-
-const alertStore = useAlertStore()
 
 interface TableHeader {
   title: string
@@ -81,6 +91,8 @@ interface TableHeader {
 }
 
 const { getMyProducts, deleteProduct } = useProducts()
+const alertStore = useAlertStore()
+const router = useRouter()
 
 const headers: TableHeader[] = [
   { title: 'Título', key: 'title' },
