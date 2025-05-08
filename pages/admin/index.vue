@@ -111,22 +111,20 @@ const handleLogin = async () => {
   // Validar formulario
   const { valid } = await form.value.validate()
   if (!valid) return
-  
+
   isLoading.value = true
   try {
     const {data, error} = await adminLogin(email.value, password.value)
     if (error) {
       alertStore.showAlert(error, 'error')
-      console.log(error)
     } else if (data) {
-        console.log(data)
         authStore.setToken(data.token)
         authStore.setUser(data.user)
         alertStore.showAlert('Inicio de sesión exitoso', 'success')
         router.push('/admin/panel')
       }
-  } catch (error: unknown) {
-    console.error('Error al iniciar sesión:', error)
+  } catch {
+    alertStore.showAlert('Error al iniciar sesión', 'error')
   } finally {
     isLoading.value = false
   }
