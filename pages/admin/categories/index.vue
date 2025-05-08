@@ -91,7 +91,7 @@ import type { Category } from '~/types/categories'
 import type { TableHeader } from '~/types/table-header'
 
 definePageMeta({
-  layout: 'admin',
+  layout: 'admin'
 })
 
 

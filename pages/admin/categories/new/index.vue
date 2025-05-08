@@ -91,7 +91,7 @@ import type { Category } from '@/types/categories'
 import { useAlertStore } from '~/stores/alert'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
 })
 
 const router = useRouter()
