@@ -14,5 +14,19 @@ export const useCategories = () => {
     return { data, error } as { data: Category, error: string | null }
   }
 
-  return { getCategories, createCategory }
+  const filterCategories = async (params?: {
+    level?: number;
+    name?: string;
+    idName?: string;
+  }) => {
+    const queryParams = new URLSearchParams()
+    if (params?.level) queryParams.append('level', params.level.toString())
+    if (params?.name) queryParams.append('name', params.name)
+    if (params?.idName) queryParams.append('idName', params.idName)
+
+    const { data, error } = await api.request('GET', `/categories/filter?${queryParams.toString()}`)
+    return { data, error } as { data: Category[], error: string | null }
+  }
+
+  return { getCategories, createCategory, filterCategories }
 }

@@ -12,6 +12,7 @@
               v-model="formData.level"
               :items="levelOptions"
               label="Nivel de Categoría"
+              variant="outlined"
               :rules="[v => !!v || 'El nivel es requerido']"
               @update:model-value="(_: number | null) => handleLevelChange()"
             />
@@ -24,6 +25,7 @@
               :items="parentCategories"
               item-title="name"
               item-value="id"
+              variant="outlined"
               label="Categoría Padre"
               :rules="parentRules"
               @update:model-value="handleParentChange"
@@ -37,6 +39,7 @@
               :items="childCategories"
               item-title="name"
               item-value="id"
+              variant="outlined"
               label="Categoría Hijo"
               :disabled="!formData.parentId"
               :rules="childRules"
@@ -47,6 +50,7 @@
             <v-text-field
               v-model="formData.name"
               label="Nombre de la Categoría"
+              variant="outlined"
               :rules="[
                 v => !!v || 'El nombre es requerido',
                 v => v.length >= 3 || 'El nombre debe tener al menos 3 caracteres'
@@ -55,6 +59,14 @@
           </v-col>
 
           <v-col cols="12" class="d-flex justify-end">
+            <v-btn
+              variant="outlined"
+              class="mr-2"
+              prepend-icon="mdi-arrow-left"
+              @click="() => router.back()"
+            >
+              Atrás
+            </v-btn>
             <v-btn
               color="primary"
               type="submit"
@@ -72,10 +84,17 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCategories } from '~/composables/services/useCategories'
 import type { VForm } from 'vuetify/components'
 import type { Category } from '@/types/categories'
 import { useAlertStore } from '~/stores/alert'
+
+definePageMeta({
+  layout: 'admin'
+})
+
+const router = useRouter()
 
 interface FormData {
   level: number | null
@@ -91,12 +110,13 @@ interface LevelOption {
 
 const form = ref<InstanceType<typeof VForm> | null>(null)
 const loading = ref(false)
+const loadingCategories = ref(false)
 
-const { createCategory } = useCategories()
+const { createCategory, filterCategories } = useCategories()
 const alertStore = useAlertStore()
 
 const formData = ref<FormData>({
-  level: null,
+  level: 1,
   parentId: null,
   childId: null,
   name: ''
@@ -110,16 +130,13 @@ const levelOptions: LevelOption[] = [
 ]
 
 // Simulación de categorías padre (esto vendrá de la API)
-const parentCategories = ref<Category[]>([
-  { id: 1, name: 'Tecnología', level: 1 },
-  { id: 2, name: 'Computación', level: 1, parentId: 1 },
-  { id: 3, name: 'Celulares', level: 2, parentId: 1 }
-])
+const parentCategories = ref<Category[]>([])
 
 // Categorías hijo filtradas según el padre seleccionado
 const childCategories = computed(() => {
   if (!formData.value.parentId) return []
-  return parentCategories.value.filter(cat => cat.parentId === formData.value.parentId)
+  const parentCategory = parentCategories.value.find(cat => cat.id === formData.value.parentId)
+  return parentCategory?.children || []
 })
 
 // Reglas de validación para el campo de categoría padre
@@ -167,16 +184,16 @@ const handleParentChange = () => {
 // Manejar envío del formulario
 const handleSubmit = async () => {
   if (!form.value) return
-  
+
   const { valid } = await form.value.validate()
-  
+
   if (!valid) return
 
   loading.value = true
   try {
     // Para nivel 3, usamos el childId como parentId final
-    const finalParentId = formData.value.level === 3 
-      ? formData.value.childId 
+    const finalParentId = formData.value.level === 3
+      ? formData.value.childId
       : formData.value.parentId
 
     const dataToSubmit = {
@@ -184,23 +201,48 @@ const handleSubmit = async () => {
       parentId: finalParentId,
       name: formData.value.name
     }
-    
-    const { data, error } = await createCategory(dataToSubmit as Category)
+
+    const { error } = await createCategory(dataToSubmit as Category)
     if (error) {
-      console.error('Error al crear la categoría:', error)
       alertStore.showAlert(error, 'error')
     } else {
-      console.log('Categoría creada:', data)
       alertStore.showAlert('Categoría creada correctamente', 'success')
+      // Limpiar el formulario
+      formData.value = {
+        level: 1,
+        name: '',
+        parentId: null,
+        childId: null
+      }
+      form.value?.resetValidation()
+      await loadCategories()
     }
-    // Aquí irá la lógica para enviar los datos a la API
-    console.log('Datos del formulario:', dataToSubmit)
-  } catch (error) {
-    console.error('Error al crear la categoría:', error)
+  } catch {
+    alertStore.showAlert('Error al crear la categoría. Vuelve a intentarlo', 'error')
   } finally {
     loading.value = false
   }
 }
+
+const loadCategories = async (): Promise<void> => {
+  loadingCategories.value = true
+  try {
+    const { data, error } = await filterCategories({ level: 1 })
+    if (error) {
+      alertStore.showAlert(error, 'error')
+    } else {
+      parentCategories.value = data
+    }
+  } catch {
+    alertStore.showAlert('Error al cargar categorías. Recarga la página', 'error')
+  } finally {
+    loadingCategories.value = false
+  }
+}
+
+onMounted(async () => {
+  await loadCategories()
+})
 </script>
 
 

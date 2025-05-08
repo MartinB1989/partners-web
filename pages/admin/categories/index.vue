@@ -82,6 +82,9 @@ const router = useRouter()
 const headers: TableHeader[] = [
   { title: 'ID', key: 'id' },
   { title: 'Nombre', key: 'name' },
+  { title: 'Nivel', key: 'level' },
+  { title: 'Padre', key: 'parent.name' },
+  { title: 'Id Name', key: 'idName' },
   { title: 'Acciones', key: 'actions', sortable: false },
 ]
 
@@ -97,10 +100,8 @@ const loadCategories = async (): Promise<void> => {
   try {
     const { data, error } = await getCategories()
     if (error) {
-      console.error('Error al cargar categorías:', error)
       alertStore.showAlert('Error al cargar categorías. Vuelve a cargar la página', 'error')
     } else {
-      console.log('Categorías cargadas:', data)
       categories.value = data
     }
   } catch (error) {
