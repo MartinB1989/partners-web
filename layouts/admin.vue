@@ -104,6 +104,7 @@
 <script setup lang="ts">
 import { useAlertStore } from '~/stores/alert'
 import { useAuthStore } from '~/stores/auth'
+import { useItemMenu } from '~/composables/useItemMenu'
 import { useRouter } from 'vue-router'
 
 const alertStore = useAlertStore()
@@ -111,12 +112,8 @@ const authStore = useAuthStore()
 const router = useRouter()
 const drawer = ref(false);
 
-// Elementos del menú de navegación
-const menuItems = ref([
-  { title: 'Panel', icon: 'mdi-view-dashboard', to: '/admin/panel' },
-  { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/admin/products' },
-  { title: 'Categorías', icon: 'mdi-folder-outline', to: '/admin/categories' },
-]);
+// Usar el composable de navegación
+const { menuItems } = useItemMenu()
 
 // Función para cerrar sesión
 const handleLogout = () => {

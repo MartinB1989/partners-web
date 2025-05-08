@@ -1,29 +1,20 @@
 <template>
   <GridNavCards
     title="Panel de administración"
-    :cards="cards"
+    :cards="dashboardCards"
   />
 </template>
 
 <script setup lang="ts">
 import GridNavCards from '~/components/app/GridNavCards.vue'
+import { useItemMenu } from '~/composables/useItemMenu'
 
 definePageMeta({
   layout: 'admin'
 })
 
-const cards = [
-  {
-    to: '/admin/products',
-    icon: 'mdi-package-variant-closed',
-    title: 'Productos'
-  },
-  {
-    to: '/admin/categories',
-    icon: 'mdi-folder-outline',
-    title: 'Categorías'
-  }
-]
+// Usar el composable de navegación para obtener las tarjetas del panel
+const { dashboardCards } = useItemMenu()
 </script>
 
 <style scoped>
