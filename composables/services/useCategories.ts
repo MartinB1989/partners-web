@@ -14,6 +14,16 @@ export const useCategories = () => {
     return { data, error } as { data: Category, error: string | null }
   }
 
+  const updateCategory = async (id: number, name: string) => {
+    const { data, error } = await api.request('PATCH', `/categories/${id}`, { name })
+    return { data, error } as { data: Category, error: string | null }
+  }
+
+  const deleteCategory = async (id: number) => {
+    const { data, error } = await api.request('DELETE', `/categories/${id}`)
+    return { data, error } as { data: Category, error: string | null }
+  }
+
   const filterCategories = async (params?: {
     level?: number;
     name?: string;
@@ -28,5 +38,5 @@ export const useCategories = () => {
     return { data, error } as { data: Category[], error: string | null }
   }
 
-  return { getCategories, createCategory, filterCategories }
+  return { getCategories, createCategory, filterCategories, updateCategory, deleteCategory }
 }

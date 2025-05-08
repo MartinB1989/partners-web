@@ -57,20 +57,38 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer/>
-          <v-btn color="primary" variant="text" @click="deleteDialog = false">Cancelar</v-btn>
-          <v-btn color="error" variant="text" @click="confirmDelete">Eliminar</v-btn>
+          <v-btn color="primary" variant="text" :disabled="isDeleting" @click="deleteDialog = false">Cancelar</v-btn>
+          <v-btn 
+            color="error" 
+            variant="text" 
+            :loading="isDeleting"
+            :disabled="isDeleting"
+            @click="confirmDelete"
+          >
+            Eliminar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal de edición de categoría -->
+    <CategoryEditModal
+      v-model="editDialog"
+      :category-id="categoryToEdit?.id || 0"
+      :category-name="categoryToEdit?.name || ''"
+      @category-updated="loadCategories"
+      @close="editDialog = false"
+    />
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import type { Category } from '~/types/categories'
-import type { TableHeader } from '~/types/table-header'
 import { useCategories } from '~/composables/services/useCategories'
 import { useAlertStore } from '~/stores/alert'
+import CategoryEditModal from '~/components/admin/categories/CategoryEditModal.vue'
+import type { Category } from '~/types/categories'
+import type { TableHeader } from '~/types/table-header'
 
 definePageMeta({
   layout: 'admin',
@@ -92,7 +110,10 @@ const categories = ref<Category[]>([])
 const loading = ref<boolean>(false)
 const deleteDialog = ref<boolean>(false)
 const categoryToDelete = ref<Category | null>(null)
-const { getCategories } = useCategories()
+const editDialog = ref<boolean>(false)
+const categoryToEdit = ref<Category | null>(null)
+const isDeleting = ref<boolean>(false)
+const { getCategories, deleteCategory } = useCategories()
 const alertStore = useAlertStore()
 
 const loadCategories = async (): Promise<void> => {
@@ -113,8 +134,8 @@ const loadCategories = async (): Promise<void> => {
 
 // Función para editar una categoría
 const editCategory = (category: Category): void => {
-  // Navegar a la página de edición
-  navigateTo(`/admin/categories/edit/${category.id}`)
+  categoryToEdit.value = category
+  editDialog.value = true
 }
 
 // Función para mostrar el modal de eliminación
@@ -126,8 +147,23 @@ const showDeleteModal = (category: Category): void => {
 
 // Función para confirmar la eliminación de la categoría
 const confirmDelete = async (): Promise<void> => {
-  // Aquí irá la lógica para eliminar la categoría
-  deleteDialog.value = false
+  try {
+    if (categoryToDelete.value) {
+      isDeleting.value = true
+      const { error } = await deleteCategory(categoryToDelete.value.id as number)
+      if (error) {
+        alertStore.showAlert(error, 'error')
+      } else {
+        alertStore.showAlert('Categoría eliminada correctamente', 'success')
+        loadCategories()
+      }
+    }
+  } catch {
+    alertStore.showAlert('Error al eliminar la categoría', 'error')
+  } finally {
+    isDeleting.value = false
+    deleteDialog.value = false
+  }
 }
 
 onMounted(() => {
