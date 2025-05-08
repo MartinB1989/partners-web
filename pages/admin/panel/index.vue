@@ -17,6 +17,11 @@ const cards = [
     to: '/admin/products',
     icon: 'mdi-package-variant-closed',
     title: 'Productos'
+  },
+  {
+    to: '/admin/categories',
+    icon: 'mdi-folder-outline',
+    title: 'Categorías'
   }
 ]
 </script>

@@ -115,6 +115,7 @@ const drawer = ref(false);
 const menuItems = ref([
   { title: 'Panel', icon: 'mdi-view-dashboard', to: '/admin/panel' },
   { title: 'Productos', icon: 'mdi-package-variant-closed', to: '/admin/products' },
+  { title: 'Categorías', icon: 'mdi-folder-outline', to: '/admin/categories' },
 ]);
 
 // Función para cerrar sesión

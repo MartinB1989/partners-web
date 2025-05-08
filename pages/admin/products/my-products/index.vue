@@ -79,16 +79,12 @@ import { useProducts } from '~/composables/services/useProducts'
 import type { Product } from '~/types/product'
 import { useAlertStore } from '~/stores/alert'
 import { useRouter } from 'vue-router'
+import type { TableHeader } from '~/types/table-header'
 
 definePageMeta({
   layout: 'admin',
 })
 
-interface TableHeader {
-  title: string
-  key: string
-  sortable?: boolean
-}
 
 const { getMyProducts, deleteProduct } = useProducts()
 const alertStore = useAlertStore()
@@ -120,6 +116,7 @@ const loadProducts = async (): Promise<void> => {
     }
   } catch (error) {
     console.error('Error al cargar productos:', error)
+    alertStore.showAlert('Error al cargar productos. Vuelve a cargar la página', 'error')
   } finally {
     loading.value = false
   }

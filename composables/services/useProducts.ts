@@ -1,5 +1,6 @@
 import { useApi } from '~/composables/useApi'
-import type { Product } from '~/types/product'
+import type { Product, ProductImage } from '~/types/product'
+import type { ListResponse } from '~/types/api-response'
 
 export interface PresignedUrlRequest {
   contentType: string
@@ -12,22 +13,6 @@ export interface PresignedUrlResponse {
   publicUrl: string
 }
 
-export interface ProductImageRequest {
-  url: string
-  key: string
-  main: boolean
-  order: number
-}
-
-interface ListResponse {
-  data: Product[]
-  meta: {
-    total: number
-    page: number
-    lastPage: number
-  }
-}
-
 export const useProducts = () => {
   const api = useApi()
 
@@ -38,7 +23,7 @@ export const useProducts = () => {
 
   const getMyProducts = async () => {
     const { data, error } = await api.request('GET', '/products/my-products?limit=0&page=1')
-    return { data, error } as { data: ListResponse, error: string | null }
+    return { data, error } as { data: ListResponse<Product>, error: string | null }
   }
 
   const getProductById = async (productId: string) => {
@@ -89,7 +74,7 @@ export const useProducts = () => {
   }
 
   // Registrar imagen en el backend después de subir a S3
-  const registerProductImage = async (productId: string, imageData: ProductImageRequest) => {
+  const registerProductImage = async (productId: string, imageData: ProductImage) => {
     const { data, error } = await api.request(
       'POST',
       `/products/${productId}/images`,
