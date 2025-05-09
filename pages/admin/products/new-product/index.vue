@@ -94,7 +94,8 @@ const product = ref({
   description: '',
   price: 0,
   stock: 0,
-  active: true
+  active: true,
+  categoryIds: []
 })
 
 const loading = ref(false)

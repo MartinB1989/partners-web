@@ -49,8 +49,15 @@
           v-model="productData.active"
           label="Producto activo"
           color="success"
-          class="mt-2"
+          class="mt-2 mb-4"
         />
+        
+        <!-- Selector de categorías -->
+        <v-divider class="mb-4"/>
+        <CategorySelector @update:categories="handleCategoriesChange" />
+        <div v-if="!productData.categoryIds.length" class="text-caption text-error mt-2">
+          Debes seleccionar al menos una categoría principal para el producto
+        </div>
       </v-card-text>
       
       <v-card-actions>
@@ -78,6 +85,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import CategorySelector from './CategorySelector.vue'
 
 const props = defineProps({
   initialData: {
@@ -87,7 +95,8 @@ const props = defineProps({
       description: '',
       price: 0,
       stock: 0,
-      active: true
+      active: true,
+      categoryIds: []
     })
   },
   hideCancelButton: {
@@ -107,15 +116,21 @@ const productData = ref({
   description: props.initialData.description,
   price: props.initialData.price,
   stock: props.initialData.stock,
-  active: props.initialData.active
+  active: props.initialData.active,
+  categoryIds: props.initialData.categoryIds || []
 })
 
 const isFormValid = computed(() => {
   return productData.value.title && 
          productData.value.description && 
          productData.value.price > 0 && 
-         productData.value.stock >= 0
+         productData.value.stock >= 0 &&
+         productData.value.categoryIds.length > 0
 })
+
+const handleCategoriesChange = (selectedCategories) => {
+  productData.value.categoryIds = selectedCategories
+}
 
 const continuar = () => {
   if (isFormValid.value) {
