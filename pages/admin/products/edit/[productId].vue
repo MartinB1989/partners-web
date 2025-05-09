@@ -19,6 +19,7 @@
       <ProductForm 
         :initial-data="product"
         :hide-cancel-button="true"
+        :is-edit-mode="true"
         submit-button-text="Guardar"
         @cancel="$router.push('/admin/products')"
         @continue="handleFormContinue"
@@ -117,16 +118,24 @@ const loadProduct = async () => {
 }
 
 const handleFormContinue = async (productData: Product) => {
-  // Actualizar los datos del producto con los datos del formulario
-  product.value = {
+  // Crear objeto de actualización
+  const updateData: Product = {
     title: productData.title,
     description: productData.description,
     price: productData.price,
     stock: productData.stock,
-    active: productData.active
+    active: productData.active,
+    categoryIds: productData.categoryIds || []
   }
+  
+  // Actualizar el producto local
+  product.value = {
+    ...product.value,
+    ...updateData
+  }
+  
   try {
-    const { data, error } = await updateProduct(productId, product.value)
+    const { data, error } = await updateProduct(productId, updateData)
     if (error) {
       alertStore.showAlert('Error al actualizar el producto: ' + error, 'error')
     } else {

@@ -6,6 +6,8 @@ export interface Product {
   active: boolean
   id?: string
   images?: ProductImage[]
+  categoryIds?: number[]
+  productCategories?: ProductCategory[]
 }
 
 export interface ProductImage {
@@ -14,5 +16,32 @@ export interface ProductImage {
   main: boolean
   order: number
   id?: string
+}
+
+export interface ProductCategory {
+  id: number
+  productId: number
+  categoryId: number
+  category: {
+    id: number
+    name: string
+    idName: string
+    level: number
+    parentId: number | null
+    parent?: {
+      id: number
+      name: string
+      idName: string
+      level: number
+      parentId: number | null
+      parent?: {
+        id: number
+        name: string
+        idName: string
+        level: number
+        parentId: number | null
+      }
+    }
+  }
 }
 

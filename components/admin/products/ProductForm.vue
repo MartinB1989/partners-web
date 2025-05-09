@@ -54,7 +54,20 @@
         
         <!-- Selector de categorías -->
         <v-divider class="mb-4"/>
-        <CategorySelector @update:categories="handleCategoriesChange" />
+        
+        <!-- Selector para edición -->
+        <CategorySelectorToEdit 
+          v-if="isEditMode"
+          :initial-product-categories="initialData.productCategories || []"
+          @update:categories="handleCategoriesChange"
+        />
+        
+        <!-- Selector para creación -->
+        <CategorySelector 
+          v-else
+          @update:categories="handleCategoriesChange" 
+        />
+        
         <div v-if="!productData.categoryIds.length" class="text-caption text-error mt-2">
           Debes seleccionar al menos una categoría principal para el producto
         </div>
@@ -86,6 +99,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import CategorySelector from './CategorySelector.vue'
+import CategorySelectorToEdit from './CategorySelectorToEdit.vue'
 
 const props = defineProps({
   initialData: {
@@ -96,7 +110,8 @@ const props = defineProps({
       price: 0,
       stock: 0,
       active: true,
-      categoryIds: []
+      categoryIds: [],
+      productCategories: []
     })
   },
   hideCancelButton: {
@@ -106,6 +121,10 @@ const props = defineProps({
   submitButtonText: {
     type: String,
     default: 'Continuar'
+  },
+  isEditMode: {
+    type: Boolean,
+    default: false
   }
 })
 
