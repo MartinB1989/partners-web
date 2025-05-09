@@ -2,55 +2,66 @@
   <div class="d-flex justify-center">
     <v-card class="pa-4 mb-4 w-100" max-width="1200">
       <v-card-text>
-        <v-text-field
-          v-model="productData.title"
-          label="Título"
-          required
-          variant="outlined"
-          class="mb-4"
-          :rules="[v => !!v || 'El título es requerido']"
-        />
-        
-        <v-textarea
-          v-model="productData.description"
-          label="Descripción"
-          rows="4"
-          required
-          variant="outlined"
-          class="mb-4"
-          :rules="[v => !!v || 'La descripción es requerida']"
-        />
-        
-        <v-text-field
-          v-model.number="productData.price"
-          label="Precio"
-          type="number"
-          min="0"
-          step="0.01"
-          prefix="$"
-          required
-          variant="outlined"
-          class="mb-4"
-          :rules="[v => !!v || 'El precio es requerido']"
-        />
-        
-        <v-text-field
-          v-model.number="productData.stock"
-          label="Stock"
-          type="number"
-          min="0"
-          required
-          variant="outlined"
-          class="mb-4"
-          :rules="[v => !!v || 'El stock es requerido']"
-        />
-        
-        <v-switch
-          v-model="productData.active"
-          label="Producto activo"
-          color="success"
-          class="mt-2 mb-4"
-        />
+        <v-row>
+          <v-col cols="12">
+            <v-switch
+              v-model="productData.active"
+              label="Publicar producto"
+              color="success"
+              class="mt-2 mb-4"
+            />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="productData.title"
+              label="Título"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => !!v || 'El título es requerido']"
+            />
+          </v-col>
+          
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model.number="productData.price"
+              label="Precio"
+              type="number"
+              min="0"
+              step="0.01"
+              prefix="$"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => !!v || 'El precio es requerido']"
+            />
+          </v-col>
+          
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model.number="productData.stock"
+              label="Stock"
+              type="number"
+              min="0"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => !!v || 'El stock es requerido']"
+            />
+          </v-col>
+          
+          <v-col cols="12" md="6">
+            <v-textarea
+              v-model="productData.description"
+              label="Descripción"
+              rows="4"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => !!v || 'La descripción es requerida']"
+            />
+          </v-col>
+        </v-row>
         
         <!-- Selector de categorías -->
         <v-divider class="mb-4"/>
