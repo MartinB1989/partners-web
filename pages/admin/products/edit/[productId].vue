@@ -1,6 +1,15 @@
 <template>
   <v-container>
-    <h1 class="text-h4 mb-6 text-center">Editar producto</h1>
+    <div class="d-flex justify-space-between align-center mb-4">
+      <h1 class="text-h4">Editar producto</h1>
+      <v-btn
+        variant="outlined"
+        prepend-icon="mdi-arrow-left"
+        @click="() => router.back()"
+      >
+        Atrás
+      </v-btn>
+    </div>
     
     <div v-if="loading" class="d-flex justify-center">
       <v-progress-circular indeterminate color="primary" />
