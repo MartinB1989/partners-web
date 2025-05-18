@@ -16,6 +16,12 @@ export interface PresignedUrlResponse {
 export const useProducts = () => {
   const api = useApi()
 
+  // Obtener productos paginados
+  const getProducts = async (page: number = 1, limit: number = 10) => {
+    const { data, error } = await api.request('GET', `/products?page=${page}&limit=${limit}`)
+    return { data, error } as { data: ListResponse<Product>, error: string | null }
+  }
+
   const createProduct = async (product: Product) => {
     const { data, error } = await api.request('POST', '/products', product)
     return { data, error }
@@ -140,6 +146,7 @@ export const useProducts = () => {
   }
 
   return {
+    getProducts,
     createProduct,
     getMyProducts,
     getProductById,
