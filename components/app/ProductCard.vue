@@ -1,5 +1,5 @@
 <template>
-  <v-card class="product-card" elevation="2" :to="`/products/${product.id}`" height="380">
+  <v-card class="product-card" elevation="2" :to="`/products/detail/${product.id}`" height="380">
     <v-img
       :src="mainImage"
       height="200"
