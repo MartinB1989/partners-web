@@ -3,7 +3,7 @@
     <v-img
       :src="mainImage"
       height="200"
-      cover
+      contain
       class="align-end"
       gradient="to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6)"
     >

@@ -57,13 +57,12 @@
               </v-window-item>
             </v-window>
 
-            <div class="mt-4 d-flex align-center overflow-x-auto py-2 gap-2">
+            <div class="mt-4 thumbnails-container">
               <v-card
                 v-for="(image, i) in productImages"
                 :key="i"
                 :elevation="currentImage === i ? 4 : 0"
-                :class="currentImage === i ? 'border border-primary' : ''"
-                class="thumbnail-card"
+                :class="['thumbnail-card', currentImage === i ? 'border border-primary' : '']"
                 @click="currentImage = i"
               >
                 <v-img
@@ -254,9 +253,39 @@ onMounted(() => {
   min-height: 80vh;
 }
 
+.thumbnails-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 8px 4px;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: thin; /* Firefox */
+}
+
+.thumbnails-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.thumbnails-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.thumbnails-container::-webkit-scrollbar-thumb {
+  background: #d0d0d0;
+  border-radius: 10px;
+}
+
+.thumbnails-container::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
 .thumbnail-card {
   cursor: pointer;
   transition: all 0.2s ease;
+  flex: 0 0 auto;
+  min-width: 70px;
+  margin: 0 2px;
 }
 
 .thumbnail-card:hover {
