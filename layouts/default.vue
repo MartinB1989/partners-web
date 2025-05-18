@@ -21,14 +21,17 @@
       </v-container>
     </v-main>
 
+    <!-- AppLoader para mostrar un loader global -->
+    <AppLoader />
+
     <v-footer app>
       <span>&copy; {{ new Date().getFullYear() }}</span>
     </v-footer>
   </v-app>
 </template>
 
-<script setup>
-// Aquí puedes añadir la lógica del componente si es necesaria
+<script setup lang="ts">
+import AppLoader from '~/components/app/AppLoader.vue';
 </script>
 
 <style scoped>

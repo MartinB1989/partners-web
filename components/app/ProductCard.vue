@@ -55,7 +55,7 @@ const props = defineProps<{
 
 const mainImage = computed(() => {
   if (!props.product.images || props.product.images.length === 0) {
-    return 'https://via.placeholder.com/300x200?text=Sin+imagen';
+    return 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/imagen-de-no-hay-imagen.png';
   }
   
   const main = props.product.images.find(img => img.main);

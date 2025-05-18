@@ -7,20 +7,8 @@
         </v-col>
       </v-row>
 
-      <!-- Loader para cuando se están cargando los productos -->
-      <v-row v-if="loading" justify="center" class="my-8">
-        <v-col cols="12" class="text-center">
-          <v-progress-circular
-            indeterminate
-            color="primary"
-            size="64"
-          />
-          <div class="mt-4 text-body-1">Cargando productos...</div>
-        </v-col>
-      </v-row>
-
       <!-- Mensaje de error si falla la carga -->
-      <v-row v-else-if="error" justify="center" class="my-8">
+      <v-row v-if="error" justify="center" class="my-8">
         <v-col cols="12">
           <v-alert type="error" variant="tonal">
             {{ error }}
@@ -90,18 +78,19 @@ import { onMounted, ref, computed } from 'vue';
 // Importamos los componentes y servicios
 import ProductCard from '~/components/app/ProductCard.vue';
 import { useProducts } from '~/composables/services/useProducts';
+import { useLoaderStore } from '~/stores/loader';
 import type { Product } from '~/types/product';
 
 // Variables de estado
 const products = ref<Product[]>([]);
-const loading = ref(false);
 const error = ref<string | null>(null);
 const currentPage = ref(1);
 const itemsPerPage = ref(12);
 const totalItems = ref(0);
 
-// Inicializamos el servicio de productos
+// Inicializamos los stores
 const productsService = useProducts();
+const loaderStore = useLoaderStore();
 
 // Calculamos el total de páginas
 const totalPages = computed(() => {
@@ -110,7 +99,7 @@ const totalPages = computed(() => {
 
 // Función para cargar productos
 async function loadProducts() {
-  loading.value = true;
+  loaderStore.startLoading('Cargando productos...');
   error.value = null;
 
   try {
@@ -131,7 +120,7 @@ async function loadProducts() {
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Error al cargar productos';
   } finally {
-    loading.value = false;
+    loaderStore.stopLoading();
   }
 }
 

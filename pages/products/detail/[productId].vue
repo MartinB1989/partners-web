@@ -1,20 +1,8 @@
 <template>
   <div class="product-detail-page">
     <v-container>
-      <!-- Loader mientras se carga el producto -->
-      <v-row v-if="loading" justify="center" class="my-8">
-        <v-col cols="12" class="text-center">
-          <v-progress-circular
-            indeterminate
-            color="primary"
-            size="64"
-          />
-          <div class="mt-4 text-body-1">Cargando producto...</div>
-        </v-col>
-      </v-row>
-
       <!-- Mensaje de error si falla la carga -->
-      <v-row v-else-if="error" justify="center" class="my-8">
+      <v-row v-if="error" justify="center" class="my-8">
         <v-col cols="12">
           <v-alert type="error" variant="tonal">
             {{ error }}
@@ -42,106 +30,26 @@
 
         <!-- Galería de imágenes -->
         <v-col cols="12" md="6" lg="5">
-          <v-card flat>
-            <v-window v-model="currentImage">
-              <v-window-item
-                v-for="(image, i) in productImages"
-                :key="i"
-              >
-                <v-img
-                  :src="image.url"
-                  height="400"
-                  class="rounded-lg"
-                  contain
-                />
-              </v-window-item>
-            </v-window>
-
-            <div class="mt-4 thumbnails-container">
-              <v-card
-                v-for="(image, i) in productImages"
-                :key="i"
-                :elevation="currentImage === i ? 4 : 0"
-                :class="['thumbnail-card', currentImage === i ? 'border border-primary' : '']"
-                @click="currentImage = i"
-              >
-                <v-img
-                  :src="image.url"
-                  height="70"
-                  width="70"
-                  contain
-                  class="rounded"
-                />
-              </v-card>
-            </div>
-          </v-card>
+          <AppProductGallery :images="productImages" />
         </v-col>
 
         <!-- Información del producto -->
         <v-col cols="12" md="6" lg="7">
-          <div class="d-flex flex-column h-100">
-            <h1 class="text-h4 font-weight-bold">{{ product.title }}</h1>
-            
-            <div class="my-4">
-              <v-chip
-                v-if="product.stock > 0"
-                color="success"
-                variant="outlined"
-                class="mr-2"
-              >
-                En stock ({{ product.stock }} disponibles)
-              </v-chip>
-              <v-chip
-                v-else
-                color="error"
-                variant="outlined"
-              >
-                Agotado
-              </v-chip>
-            </div>
-            
-            <div class="text-h4 font-weight-bold primary--text my-4">
-              ${{ formatPrice(product.price) }}
-            </div>
-            
-            <div class="mt-auto">
-              <v-btn
-                color="primary"
-                size="large"
-                block
-                :disabled="product.stock <= 0"
-                prepend-icon="mdi-cart-plus"
-                @click="addToCart"
-              >
-                Agregar al carrito
-              </v-btn>
-            </div>
-          </div>
+          <AppProductInfo
+            :title="product.title"
+            :price="product.price"
+            :stock="product.stock"
+            :formatted-price="formatPrice(product.price)"
+            @add-to-cart="addToCart"
+          />
         </v-col>
         
         <!-- Sección de pestañas con la descripción y otras informaciones -->
         <v-col cols="12" class="mt-8 border border-1 border-opacity-50 rounded-lg">
-          <v-card flat>
-            <v-tabs
-              v-model="activeTab"
-              color="primary"
-              align-tabs="center"
-              grow
-            >
-              <v-tab value="description">Descripción</v-tab>
-            </v-tabs>
-            
-            <v-card-text class="mt-4">
-              <v-window v-model="activeTab">
-                <!-- Pestaña de descripción -->
-                <v-window-item value="description">
-                  <div class="product-description text-body-1">
-                    {{ product.description }}
-                  </div>
-                </v-window-item>
-              </v-window>
-            </v-card-text>
-          </v-card>
+          <AppProductTabs 
+            :description="product.description"
+            :tabs="[{ label: 'Descripción', value: 'description' }]"
+          />
         </v-col>
       </v-row>
 
@@ -167,24 +75,29 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useProducts } from '~/composables/services/useProducts';
+import { useLoaderStore } from '~/stores/loader';
 import type { Product, ProductImage } from '~/types/product';
+
+// Importar los componentes
+import AppProductGallery from '~/components/app/AppProductGallery.vue';
+import AppProductInfo from '~/components/app/AppProductInfo.vue';
+import AppProductTabs from '~/components/app/AppProductTabs.vue';
 
 const route = useRoute();
 const productsService = useProducts();
+const loaderStore = useLoaderStore();
 
 // Estado
 const product = ref<Product | null>(null);
-const loading = ref<boolean>(true);
 const error = ref<string | null>(null);
-const currentImage = ref(0);
-const activeTab = ref('description');
 
 // Calcular imágenes del producto
 const productImages = computed<ProductImage[]>(() => {
   if (!product.value || !product.value.images || product.value.images.length === 0) {
     // Si no hay imágenes, devuelve una imagen por defecto
     return [{
-      url: 'https://via.placeholder.com/500x500?text=Sin+imagen',
+      // url: 'https://via.placeholder.com/500x500?text=Sin+imagen',
+      url: 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/imagen-de-no-hay-imagen.png',
       key: 'default',
       main: true,
       order: 0
@@ -200,11 +113,10 @@ async function loadProduct() {
   const productId = route.params.productId as string;
   if (!productId) {
     error.value = 'ID de producto no válido';
-    loading.value = false;
     return;
   }
 
-  loading.value = true;
+  loaderStore.startLoading('Cargando producto...');
   error.value = null;
 
   try {
@@ -223,7 +135,7 @@ async function loadProduct() {
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Error al cargar el producto';
   } finally {
-    loading.value = false;
+    loaderStore.stopLoading();
   }
 }
 
