@@ -129,7 +129,6 @@ const levelOptions: LevelOption[] = [
   { title: 'Nivel 3 - Sub-subcategoría', value: 3 }
 ]
 
-// Simulación de categorías padre (esto vendrá de la API)
 const parentCategories = ref<Category[]>([])
 
 // Categorías hijo filtradas según el padre seleccionado
