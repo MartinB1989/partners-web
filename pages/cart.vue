@@ -26,14 +26,14 @@
           
           <div class="d-flex justify-space-between mt-2">
             <span>Subtotal ({{ cartStore.totalItems }} productos)</span>
-            <span class="font-weight-bold">{{ formattedSubtotal }}</span>
+            <span class="font-weight-bold">{{ cartStore.cart?.subtotalFormatted || '$0' }}</span>
           </div>
           
           <v-divider class="my-4"/>
           
           <div class="d-flex justify-space-between mt-2">
             <span class="text-h6">Total</span>
-            <span class="text-h6 font-weight-bold">{{ formattedSubtotal }}</span>
+            <span class="text-h6 font-weight-bold">{{ cartStore.cart?.totalFormatted || '$0' }}</span>
           </div>
           
           <v-btn
@@ -43,7 +43,7 @@
             size="large"
             class="mt-4"
             :loading="loading"
-            :to="{ name: 'checkout' }"
+            to="/checkout"
           >
             Proceder al pago
           </v-btn>
@@ -73,33 +73,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useCartStore } from '~/stores/cart'
 import { useCart } from '~/composables/services/useCart'
 import type { CartItem, Cart } from '~/types/cart'
 
 const cartStore = useCartStore()
 const { getAnonymousCart } = useCart()
-const loading = ref(true)
+const loading = ref(false)
 
-// Calcular subtotal
-const formattedSubtotal = computed(() => {
-  const subtotal = cartStore.cartItems.reduce(
-    (total, item) => total + (item.product.price * item.quantity), 
-    0
-  )
-  
-  const formatter = new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR'
-  })
-  
-  return formatter.format(subtotal)
-})
-
-// Cargar el carrito al montar el componente
+// Cargar el carrito solo si aún no ha sido cargado por el plugin
 onMounted(async () => {
-  await refreshCart()
+  // Verificamos si el carrito ya ha sido cargado por el plugin
+  if (!cartStore.cart) {
+    await refreshCart()
+  }
 })
 
 // Actualizar el carrito

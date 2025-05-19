@@ -22,4 +22,5 @@ Fase 2 (futura):
 - Para el manejo de estado estamos usando Pinia, hay una carpeta /stores
 - Los componentes genericos se crean en la carpeta /components/app.
 - Los componentes unicos de pagina se crean dentro de "/components/{ruta-de-pagina}", ejemplo, para la ruta "/admin/categories" los componentes unicos para esa pagina estaran en "/components/admin/categories"
+- La web es para Argentina, la moneda siempre sera peso argentino
 </instrucciones>
