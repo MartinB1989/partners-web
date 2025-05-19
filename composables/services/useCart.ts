@@ -59,10 +59,10 @@ export const useCart = () => {
   /**
    * Actualiza la cantidad de un producto en el carrito
    */
-  const updateCartItemQuantity = async (itemId: string, quantity: number) => {
+  const updateCartItemQuantity = async (productId: number, quantity: number) => {
     const { data, error } = await api.request<CartItem>(
       'PATCH',
-      `/carts/anonymous/items/${itemId}`,
+      `/carts/anonymous/items/${productId}`,
       { quantity },
       { credentials: 'include' }
     )

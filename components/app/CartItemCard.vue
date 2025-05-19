@@ -105,7 +105,10 @@ async function updateQuantity(newQuantity: number) {
     loading.value = true
     cartStore.setLoading(true)
     
-    const { data, error } = await updateCartItemQuantity(props.item.id, newQuantity)
+    // Usamos el productId para actualizar la cantidad
+    console.log('Actualizando cantidad del producto con ID:', props.item.productId)
+    
+    const { data, error } = await updateCartItemQuantity(props.item.productId, newQuantity)
     
     if (!error && data) {
       // Calcular la diferencia para actualizar el contador total
