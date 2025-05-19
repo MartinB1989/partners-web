@@ -7,7 +7,7 @@
         :alt="item.product.title"
         width="120"
         height="120"
-        cover
+        contain
         class="flex-shrink-0"
       />
       
