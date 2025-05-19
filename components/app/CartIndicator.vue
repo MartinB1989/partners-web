@@ -3,8 +3,7 @@
     <v-badge
       :content="cartStore.totalItems.toString()"
       :value="cartStore.totalItems"
-      color="primary"
-      floating
+      color="red"
       overlap
     >
       <v-btn

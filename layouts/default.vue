@@ -4,9 +4,7 @@
       <v-app-bar-nav-icon/>
       <v-app-bar-title>Mi Tienda</v-app-bar-title>
       <v-spacer/>
-      <v-btn icon>
-        <v-icon>mdi-cart</v-icon>
-      </v-btn>
+      <app-cart-indicator />
       <v-btn icon>
         <v-icon>mdi-heart</v-icon>
       </v-btn>
@@ -57,6 +55,7 @@
 <script setup lang="ts">
 import { useAlertStore } from '~/stores/alert'
 import AppLoader from '~/components/app/AppLoader.vue';
+import AppCartIndicator from '~/components/app/CartIndicator.vue';
 
 const alertStore = useAlertStore()
 
