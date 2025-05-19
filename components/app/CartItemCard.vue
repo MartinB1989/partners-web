@@ -132,7 +132,10 @@ async function remove() {
     loading.value = true
     cartStore.setLoading(true)
     
-    const { error } = await removeCartItem(props.item.id)
+    // Usamos el productId para eliminar el item
+    console.log('Eliminando producto con ID:', props.item.productId)
+    
+    const { error } = await removeCartItem(props.item.productId)
     
     if (!error) {
       cartStore.decrementItemCount(props.item.quantity)

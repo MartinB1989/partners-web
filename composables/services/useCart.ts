@@ -77,10 +77,10 @@ export const useCart = () => {
   /**
    * Elimina un producto del carrito
    */
-  const removeCartItem = async (itemId: string) => {
+  const removeCartItem = async (productId: number) => {
     const { data, error } = await api.request<CartItem>(
       'DELETE',
-      `/carts/anonymous/items/${itemId}`,
+      `/carts/anonymous/items/${productId}`,
       null,
       { credentials: 'include' }
     )
