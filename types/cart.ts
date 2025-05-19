@@ -26,12 +26,8 @@ export interface Cart {
   deliveryType: DeliveryType
   
   // Campos calculados por el backend
-  subtotal?: number
-  subtotalFormatted?: string
   total?: number
   totalFormatted?: string
-  shippingCost?: number
-  shippingCostFormatted?: string
 }
 
 /**

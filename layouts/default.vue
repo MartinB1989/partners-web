@@ -1,19 +1,15 @@
 <template>
   <v-app>
-    <v-app-bar color="primary" app>
-      <v-app-bar-nav-icon/>
+    <!-- App Bar -->
+    <v-app-bar color="primary" app elevation="0" class="px-4">
       <v-app-bar-title>Mi Tienda</v-app-bar-title>
       <v-spacer/>
       <app-cart-indicator />
-      <v-btn icon>
-        <v-icon>mdi-heart</v-icon>
-      </v-btn>
-      <v-btn icon>
-        <v-icon>mdi-account</v-icon>
-      </v-btn>
     </v-app-bar>
 
+    
     <v-main>
+      <app-navigation-menu class="app-navigation" />
       <v-container fluid>
         <slot />
       </v-container>
@@ -31,8 +27,17 @@
 <script setup lang="ts">
 import AppLoader from '~/components/app/AppLoader.vue';
 import AppCartIndicator from '~/components/app/CartIndicator.vue';
+import AppNavigationMenu from '~/components/app/AppNavigationMenu.vue';
 </script>
 
 <style scoped>
-/* Estilos específicos del layout si son necesarios */
+.app-navigation {
+  margin-top: 64px; /* Altura predeterminada del app-bar */
+}
+
+@media (max-width: 600px) {
+  .app-navigation {
+    margin-top: 56px; /* Altura del app-bar en pantallas pequeñas */
+  }
+}
 </style> 

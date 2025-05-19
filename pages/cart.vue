@@ -38,14 +38,14 @@
                 <v-card-title>Resumen del pedido</v-card-title>
                 
                 <div class="d-flex justify-space-between mt-2">
-                  <span>Subtotal ({{ cartStore.totalItems }} productos)</span>
-                  <span class="font-weight-bold">{{ cartStore.cart?.subtotalFormatted || '$0' }}</span>
+                  <span>Total ({{ cartStore.totalItems }} productos)</span>
+                  <span class="font-weight-bold">{{ cartStore.cart?.totalFormatted || '$0' }}</span>
                 </div>
                 
                 <v-divider class="my-4"/>
                 
                 <div class="d-flex justify-space-between mt-2">
-                  <span class="text-h6">Total</span>
+                  <span class="text-h6">Total a pagar</span>
                   <span class="text-h6 font-weight-bold">{{ cartStore.cart?.totalFormatted || '$0' }}</span>
                 </div>
                 
