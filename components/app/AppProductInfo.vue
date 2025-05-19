@@ -25,36 +25,31 @@
     </div>
     
     <div class="mt-auto">
-      <v-btn
-        color="primary"
-        size="large"
-        block
-        :disabled="stock <= 0"
-        prepend-icon="mdi-cart-plus"
-        @click="$emit('add-to-cart')"
-      >
-        {{ buttonText }}
-      </v-btn>
+      <app-add-to-cart-button
+        :product-id="productId"
+        :stock="stock"
+        :is-available="stock > 0"
+        :button-text="buttonText"
+      />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import AppAddToCartButton from '~/components/app/AddToCartButton.vue'
+
 interface Props {
   title: string;
   price: number;
   stock: number;
   formattedPrice: string;
+  productId: number;
   buttonText?: string;
 }
 
 withDefaults(defineProps<Props>(), {
   buttonText: 'Agregar al carrito'
 });
-
-defineEmits<{
-  (e: 'add-to-cart'): void;
-}>();
 </script>
 
 <style scoped>

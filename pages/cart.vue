@@ -1,0 +1,145 @@
+<template>
+  <v-container>
+    <h1 class="text-h4 mb-4">Mi Carrito</h1>
+
+    <v-card v-if="loading" class="pa-4 mb-4">
+      <v-progress-linear indeterminate color="primary"/>
+      <p class="text-center my-4">Cargando carrito...</p>
+    </v-card>
+
+    <template v-else-if="cartStore.hasItems">
+      <!-- Lista de productos en el carrito -->
+      <div class="cart-items">
+        <app-cart-item-card
+          v-for="item in cartStore.cartItems"
+          :key="item.id"
+          :item="item"
+          @removed="handleItemRemoved"
+          @updated="handleItemUpdated"
+        />
+      </div>
+
+      <!-- Resumen del carrito -->
+      <v-card class="mt-4" variant="outlined">
+        <v-card-item>
+          <v-card-title>Resumen del pedido</v-card-title>
+          
+          <div class="d-flex justify-space-between mt-2">
+            <span>Subtotal ({{ cartStore.totalItems }} productos)</span>
+            <span class="font-weight-bold">{{ formattedSubtotal }}</span>
+          </div>
+          
+          <v-divider class="my-4"/>
+          
+          <div class="d-flex justify-space-between mt-2">
+            <span class="text-h6">Total</span>
+            <span class="text-h6 font-weight-bold">{{ formattedSubtotal }}</span>
+          </div>
+          
+          <v-btn
+            color="primary"
+            variant="elevated"
+            block
+            size="large"
+            class="mt-4"
+            :loading="loading"
+            :to="{ name: 'checkout' }"
+          >
+            Proceder al pago
+          </v-btn>
+        </v-card-item>
+      </v-card>
+    </template>
+
+    <!-- Carrito vacío -->
+    <v-card v-else class="pa-4 text-center">
+      <v-icon
+        size="64"
+        color="grey"
+        class="mb-4"
+      >
+        mdi-cart-outline
+      </v-icon>
+      <h2 class="text-h5 mb-2">Tu carrito está vacío</h2>
+      <p class="text-body-1 mb-4">Añade productos para comenzar tu compra</p>
+      <v-btn
+        color="primary"
+        to="/"
+      >
+        Ir a la tienda
+      </v-btn>
+    </v-card>
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useCartStore } from '~/stores/cart'
+import { useCart } from '~/composables/services/useCart'
+import type { CartItem, Cart } from '~/types/cart'
+
+const cartStore = useCartStore()
+const { getAnonymousCart } = useCart()
+const loading = ref(true)
+
+// Calcular subtotal
+const formattedSubtotal = computed(() => {
+  const subtotal = cartStore.cartItems.reduce(
+    (total, item) => total + (item.product.price * item.quantity), 
+    0
+  )
+  
+  const formatter = new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR'
+  })
+  
+  return formatter.format(subtotal)
+})
+
+// Cargar el carrito al montar el componente
+onMounted(async () => {
+  await refreshCart()
+})
+
+// Actualizar el carrito
+async function refreshCart() {
+  try {
+    loading.value = true
+    const { data } = await getAnonymousCart()
+    if (data) {
+      cartStore.setCart(data)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// Manejar la eliminación de un item
+function handleItemRemoved(itemId: string) {
+  if (!cartStore.cart) return
+  
+  // Filtrar el item eliminado del carrito local
+  const updatedCart = { 
+    ...cartStore.cart,
+    items: cartStore.cartItems.filter(item => item.id !== itemId)
+  } as Cart
+  
+  cartStore.setCart(updatedCart)
+}
+
+// Manejar la actualización de un item
+function handleItemUpdated(updatedItem: CartItem) {
+  if (!cartStore.cart) return
+  
+  // Actualizar el item específico en el carrito local
+  const updatedCart = { 
+    ...cartStore.cart,
+    items: cartStore.cartItems.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    )
+  } as Cart
+  
+  cartStore.setCart(updatedCart)
+}
+</script>

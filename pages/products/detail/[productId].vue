@@ -40,7 +40,7 @@
             :price="product.price"
             :stock="product.stock"
             :formatted-price="formatPrice(product.price)"
-            @add-to-cart="addToCart"
+            :product-id="Number(route.params.productId)"
           />
         </v-col>
         
@@ -145,13 +145,6 @@ function formatPrice(price: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
-}
-
-// Función para agregar al carrito (solo placeholder por ahora)
-function addToCart() {
-  // Esta funcionalidad se implementará más adelante
-  console.log('Agregar al carrito:', product.value?.id);
-  // Placeholder para futuro desarrollo
 }
 
 // Cargar el producto al montar el componente
