@@ -64,7 +64,7 @@ const props = defineProps({
 
 const quantity = ref(1)
 const loading = ref(false)
-const { addItemToCart } = useCart()
+const { addItemToCart, getAnonymousCart } = useCart()
 const cartStore = useCartStore()
 
 // Incrementar la cantidad
@@ -94,8 +94,14 @@ async function addToCart() {
     const { data, error } = await addItemToCart(props.productId, quantity.value)
     
     if (!error && data) {
-      // Actualizar el contador de elementos del carrito
-      cartStore.incrementItemCount(quantity.value)
+      // Actualizar el carrito completo después de agregar un producto
+      const { data: cartData } = await getAnonymousCart()
+      if (cartData) {
+        cartStore.setCart(cartData)
+      } else {
+        // Si no se puede obtener el carrito completo, al menos actualizar el contador
+        cartStore.incrementItemCount(quantity.value)
+      }
       
       // Reiniciar el contador a 1 después de añadir al carrito
       quantity.value = 1

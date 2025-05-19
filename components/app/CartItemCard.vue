@@ -1,63 +1,73 @@
 <template>
-  <v-card class="mb-4" variant="outlined">
-    <div class="d-flex">
-      <!-- Imagen del producto -->
-      <v-img
-        :src="productImage"
-        :alt="item.product.title"
-        width="120"
-        height="120"
-        contain
-        class="flex-shrink-0"
-      />
+  <v-card class="cart-item-card" elevation="2" height="380">
+    <v-img
+      :src="productImage"
+      height="200"
+      contain
+      :class="hasImage ? 'align-end' : ''"
+      gradient="to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6)"
+    >
+      <v-card-title v-if="!hasImage" class="text-white">
+        {{ truncateText(item.product.title, 35) }}
+      </v-card-title>
+    </v-img>
+    
+    <v-card-text class="d-flex flex-column justify-space-between" style="height: 180px;">
+      <div>
+        <div v-if="hasImage" class="text-subtitle-1 font-weight-medium mb-1 title-truncate">
+          {{ truncateText(item.product.title, 35) }}
+        </div>
+        <div class="text-caption text-grey mt-2 description-truncate">
+          {{ truncateText(item.product.description || '', 50) }}
+        </div>
+      </div>
       
-      <!-- Información del producto -->
-      <v-card-item class="flex-grow-1">
-        <v-card-title class="text-subtitle-1 font-weight-bold">
-          {{ item.product.title }}
-        </v-card-title>
+      <div class="d-flex flex-column">
+        <div class="d-flex justify-space-between align-center mb-2">
+          <div class="text-h6 primary--text font-weight-bold">{{ formattedPrice }}</div>
+          <v-chip size="small" color="primary" variant="outlined">
+            x{{ item.quantity }}
+          </v-chip>
+        </div>
         
-        <v-card-subtitle>
-          {{ formattedPrice }}
-        </v-card-subtitle>
-        
-        <!-- Controles de cantidad -->
-        <div class="d-flex align-center mt-2">
-          <v-btn
-            variant="text"
-            icon
-            density="comfortable"
-            :disabled="loading || item.quantity <= 1"
-            @click="updateQuantity(item.quantity - 1)"
-          >
-            <v-icon>mdi-minus</v-icon>
-          </v-btn>
-          
-          <span class="mx-2">{{ item.quantity }}</span>
-          
-          <v-btn
-            variant="text"
-            icon
-            density="comfortable"
-            :disabled="loading || item.quantity >= item.product.stock"
-            @click="updateQuantity(item.quantity + 1)"
-          >
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
+        <div class="d-flex align-center justify-space-between">
+          <div>
+            <v-btn
+              variant="text"
+              density="comfortable"
+              icon
+              color="primary"
+              :disabled="loading || item.quantity <= 1"
+              @click.stop="updateQuantity(item.quantity - 1)"
+            >
+              <v-icon>mdi-minus</v-icon>
+            </v-btn>
+            
+            <v-btn
+              variant="text"
+              density="comfortable"
+              icon
+              color="primary"
+              :disabled="loading || item.quantity >= item.product.stock"
+              @click.stop="updateQuantity(item.quantity + 1)"
+            >
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </div>
           
           <v-btn
-            variant="text"
-            icon
+            variant="outlined"
+            size="small"
             color="error"
+            icon
             :disabled="loading"
-            class="ml-auto"
-            @click="remove"
+            @click.stop="remove"
           >
             <v-icon>mdi-delete</v-icon>
           </v-btn>
         </div>
-      </v-card-item>
-    </div>
+      </div>
+    </v-card-text>
   </v-card>
 </template>
 
@@ -85,17 +95,31 @@ const productImage = computed(() => {
     }
     return props.item.product.images[0].url
   }
-  return '/images/placeholder.png'
+  return 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/imagen-de-no-hay-imagen.png'
+})
+
+const hasImage = computed(() => {
+  return props.item.product.images && props.item.product.images.length > 0
 })
 
 // Formatear el precio
 const formattedPrice = computed(() => {
-  const formatter = new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'EUR'
-  })
-  return formatter.format(props.item.product.price)
+  return `$${formatPrice(props.item.product.price)}`
 })
+
+function formatPrice(price: number): string {
+  return price.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+function truncateText(text: string, maxLength: number): string {
+  if (!text) return '';
+  return text.length > maxLength 
+    ? text.substring(0, maxLength) + '...' 
+    : text;
+}
 
 // Actualizar la cantidad del producto
 async function updateQuantity(newQuantity: number) {
@@ -104,9 +128,6 @@ async function updateQuantity(newQuantity: number) {
   try {
     loading.value = true
     cartStore.setLoading(true)
-    
-    // Usamos el productId para actualizar la cantidad
-    console.log('Actualizando cantidad del producto con ID:', props.item.productId)
     
     const { data, error } = await updateCartItemQuantity(props.item.productId, newQuantity)
     
@@ -135,9 +156,6 @@ async function remove() {
     loading.value = true
     cartStore.setLoading(true)
     
-    // Usamos el productId para eliminar el item
-    console.log('Eliminando producto con ID:', props.item.productId)
-    
     const { error } = await removeCartItem(props.item.productId)
     
     if (!error) {
@@ -150,3 +168,34 @@ async function remove() {
   }
 }
 </script>
+
+<style scoped>
+.cart-item-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.cart-item-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.title-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.description-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+</style>
