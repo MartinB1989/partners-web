@@ -39,14 +39,26 @@
                 
                 <div class="d-flex justify-space-between mt-2">
                   <span>Total ({{ cartStore.totalItems }} productos)</span>
-                  <span class="font-weight-bold">{{ cartStore.cart?.totalFormatted || '$0' }}</span>
+                  <app-currency-display 
+                    v-if="cartStore.cart?.total" 
+                    :amount="cartStore.cart.total" 
+                    bold
+                  />
+                  <span v-else class="font-weight-bold">$0</span>
                 </div>
                 
                 <v-divider class="my-4"/>
                 
                 <div class="d-flex justify-space-between mt-2">
                   <span class="text-h6">Total a pagar</span>
-                  <span class="text-h6 font-weight-bold">{{ cartStore.cart?.totalFormatted || '$0' }}</span>
+                  <app-currency-display 
+                    v-if="cartStore.cart?.total" 
+                    :amount="cartStore.cart.total" 
+                    bold 
+                    color="primary"
+                    class="text-h6"
+                  />
+                  <span v-else class="text-h6 font-weight-bold">$0</span>
                 </div>
                 
                 <v-btn
@@ -93,6 +105,7 @@ import { ref, onMounted } from 'vue'
 import { useCartStore } from '~/stores/cart'
 import { useCart } from '~/composables/services/useCart'
 import type { CartItem, Cart } from '~/types/cart'
+import AppCurrencyDisplay from '~/components/app/CurrencyDisplay.vue'
 
 const cartStore = useCartStore()
 const { getAnonymousCart } = useCart()

@@ -21,7 +21,7 @@
     </div>
     
     <div class="text-h4 font-weight-bold primary--text my-4">
-      ${{ formattedPrice }}
+      <app-currency-display :amount="price" color="primary" bold class="text-h4" />
     </div>
     
     <div class="mt-auto">
@@ -37,12 +37,12 @@
 
 <script lang="ts" setup>
 import AppAddToCartButton from '~/components/app/AddToCartButton.vue'
+import AppCurrencyDisplay from '~/components/app/CurrencyDisplay.vue'
 
 interface Props {
   title: string;
   price: number;
   stock: number;
-  formattedPrice: string;
   productId: number;
   buttonText?: string;
 }

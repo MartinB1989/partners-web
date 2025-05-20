@@ -24,7 +24,9 @@
       
       <div class="d-flex flex-column">
         <div class="d-flex justify-space-between align-center mb-2">
-          <div class="text-h6 primary--text font-weight-bold">{{ formattedPrice }}</div>
+          <div class="text-h6 primary--text font-weight-bold">
+            <app-currency-display :amount="item.product.price" />
+          </div>
           <v-chip size="small" color="primary" variant="outlined">
             x{{ item.quantity }}
           </v-chip>
@@ -76,6 +78,7 @@ import { ref, computed } from 'vue'
 import type { CartItem } from '~/types/cart'
 import { useCart } from '~/composables/services/useCart'
 import { useCartStore } from '~/stores/cart'
+import AppCurrencyDisplay from '~/components/app/CurrencyDisplay.vue'
 
 const props = defineProps<{
   item: CartItem
@@ -101,18 +104,6 @@ const productImage = computed(() => {
 const hasImage = computed(() => {
   return props.item.product.images && props.item.product.images.length > 0
 })
-
-// Formatear el precio
-const formattedPrice = computed(() => {
-  return `$${formatPrice(props.item.product.price)}`
-})
-
-function formatPrice(price: number): string {
-  return price.toLocaleString('es-AR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-}
 
 function truncateText(text: string, maxLength: number): string {
   if (!text) return '';

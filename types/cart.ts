@@ -27,7 +27,6 @@ export interface Cart {
   
   // Campos calculados por el backend
   total?: number
-  totalFormatted?: string
 }
 
 /**
@@ -40,6 +39,7 @@ export interface CartItem {
   productId: number
   product: Product
   quantity: number
+  subtotal: number
   createdAt: Date
   updatedAt: Date
 }

@@ -23,7 +23,9 @@
       </div>
       
       <div class="d-flex justify-space-between align-center mt-auto pt-2">
-        <div class="text-h6 primary--text font-weight-bold">${{ formatPrice(product.price) }}</div>
+        <div class="text-h6 primary--text font-weight-bold">
+          <app-currency-display :amount="product.price" />
+        </div>
         <v-chip
           v-if="product.stock > 0"
           size="small"
@@ -48,6 +50,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import type { Product } from '~/types/product';
+import AppCurrencyDisplay from '~/components/app/CurrencyDisplay.vue';
 
 const props = defineProps<{
   product: Product;
@@ -65,13 +68,6 @@ const mainImage = computed(() => {
 const hasImage = computed(() => {
   return props.product.images && props.product.images.length > 0;
 });
-
-function formatPrice(price: number): string {
-  return price.toLocaleString('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-}
 
 function truncateText(text: string, maxLength: number): string {
   if (!text) return '';

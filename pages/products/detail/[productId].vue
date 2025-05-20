@@ -39,7 +39,6 @@
             :title="product.title"
             :price="product.price"
             :stock="product.stock"
-            :formatted-price="formatPrice(product.price)"
             :product-id="Number(route.params.productId)"
           />
         </v-col>
@@ -137,14 +136,6 @@ async function loadProduct() {
   } finally {
     loaderStore.stopLoading();
   }
-}
-
-// Función para formatear el precio
-function formatPrice(price: number): string {
-  return price.toLocaleString('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
 }
 
 // Cargar el producto al montar el componente
