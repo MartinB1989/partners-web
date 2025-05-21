@@ -1,5 +1,5 @@
 <template>
-  <div class="cart-indicator">
+  <div class="cart-indicator mr-4">
     <v-badge
       :content="cartStore.totalItems.toString()"
       :value="cartStore.totalItems"

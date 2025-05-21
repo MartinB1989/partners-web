@@ -17,8 +17,11 @@
         <div v-if="hasImage" class="text-subtitle-1 font-weight-medium mb-1 title-truncate">
           {{ truncateText(item.product.title, 35) }}
         </div>
-        <div class="text-caption text-grey mt-2 description-truncate">
-          {{ truncateText(item.product.description || '', 50) }}
+        <div class="d-flex align-center mt-2">
+          <span class="text-caption text-grey me-1">Subtotal:</span>
+          <span class="font-weight-medium primary--text">
+            <app-currency-display :amount="subtotal" />
+          </span>
         </div>
       </div>
       
@@ -84,10 +87,15 @@ const props = defineProps<{
   item: CartItem
 }>()
 
-const emit = defineEmits(['removed', 'updated'])
+const emit = defineEmits(['removed', 'updated', 'refresh-cart'])
 const loading = ref(false)
 const { updateCartItemQuantity, removeCartItem } = useCart()
 const cartStore = useCartStore()
+
+// Calcular el subtotal (precio × cantidad)
+const subtotal = computed(() => {
+  return props.item.product.price * props.item.quantity
+})
 
 // Obtener la imagen principal o una imagen por defecto
 const productImage = computed(() => {
@@ -118,7 +126,6 @@ async function updateQuantity(newQuantity: number) {
   
   try {
     loading.value = true
-    cartStore.setLoading(true)
     
     const { data, error } = await updateCartItemQuantity(props.item.productId, newQuantity)
     
@@ -132,10 +139,11 @@ async function updateQuantity(newQuantity: number) {
       }
       
       emit('updated', data)
+      // Emitir evento para solicitar actualización silenciosa del carrito
+      emit('refresh-cart', { silent: true })
     }
   } finally {
     loading.value = false
-    cartStore.setLoading(false)
   }
 }
 
@@ -145,17 +153,18 @@ async function remove() {
   
   try {
     loading.value = true
-    cartStore.setLoading(true)
     
     const { error } = await removeCartItem(props.item.productId)
     
     if (!error) {
-      cartStore.decrementItemCount(props.item.quantity)
+      // Informamos que se eliminó este ítem
       emit('removed', props.item.id)
+      
+      // Solicitamos una actualización silenciosa del carrito desde el backend
+      emit('refresh-cart', { silent: true })
     }
   } finally {
     loading.value = false
-    cartStore.setLoading(false)
   }
 }
 </script>

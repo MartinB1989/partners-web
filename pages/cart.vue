@@ -23,6 +23,7 @@
               :item="item"
               @removed="handleItemRemoved"
               @updated="handleItemUpdated"
+              @refresh-cart="(options) => refreshCart(options)"
             />
           </v-col>
         </v-row>
@@ -120,15 +121,26 @@ onMounted(async () => {
 })
 
 // Actualizar el carrito
-async function refreshCart() {
+async function refreshCart(options = { silent: false }) {
   try {
-    loading.value = true
-    const { data } = await getAnonymousCart()
-    if (data) {
+    // Si la actualización es silenciosa, no activamos el indicador de carga
+    if (!options.silent) {
+      loading.value = true
+    }
+    
+    const { data, error } = await getAnonymousCart()
+    
+    if (!error && data) {
+      // Actualizar el carrito completo, incluyendo totales y cantidades
       cartStore.setCart(data)
+      
+      // Asegurar que el contador de items esté actualizado
+      cartStore.updateItemCount()
     }
   } finally {
-    loading.value = false
+    if (!options.silent) {
+      loading.value = false
+    }
   }
 }
 
