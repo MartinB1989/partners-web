@@ -32,6 +32,12 @@ export function useItemMenu() {
       to: '/admin/categories',
       roles: adminOnly
     },
+    { 
+      title: 'Puntos de retiro', 
+      icon: 'mdi-map-marker-outline', 
+      to: '/admin/pickup-point',
+      roles: adminOnly
+    }
   ])
   
   // Filtrar elementos de navegación según el rol del usuario
