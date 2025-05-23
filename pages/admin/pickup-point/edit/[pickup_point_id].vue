@@ -1,6 +1,17 @@
 <template>
   <v-container>
     <v-row>
+      <v-col cols="12" class="d-flex align-center mb-4">
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-arrow-left"
+          to="/admin/pickup-point"
+          color="primary"
+        >
+          Atrás
+        </v-btn>
+        <v-spacer/>
+      </v-col>
       <v-col cols="12">
         <v-card>
           <v-card-title class="headline">
