@@ -19,11 +19,6 @@
           </v-card-title>
           
           <v-card-text>
-            <v-row>
-              <v-col cols="12">
-                <GooglePlaceAutocomplete @place-selected="handlePlaceSelected" />
-              </v-col>
-            </v-row>
             <PickupPointForm
               :loading="loading"
               submit-button-text="Guardar punto de retiro"
@@ -56,7 +51,6 @@ import { ref, reactive } from 'vue'
 import { usePickupPoint } from '@/composables/services/usePickupPoint'
 import { useRouter } from 'vue-router'
 import PickupPointForm from '@/components/admin/pickup-point/PickupPointForm.vue'
-import GooglePlaceAutocomplete from '@/components/app/GooglePlaceAutocomplete.vue'
 definePageMeta({
   layout: 'admin',
 })
@@ -83,10 +77,6 @@ interface FormData {
   zipCode: string
   additionalInfo?: string
   isActive: boolean
-}
-
-const handlePlaceSelected = (place: unknown) => {
-  console.log(place)
 }
 
 const onSubmit = async (formData: FormData) => {

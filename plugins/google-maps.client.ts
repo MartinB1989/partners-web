@@ -1,5 +1,6 @@
-import { defineNuxtPlugin } from '#app'
+import { defineNuxtPlugin, useRuntimeConfig  } from '#app'
 import type { GoogleMapsLibrary } from '@/types/google-maps'
+
 
 // Extendemos el tipo Window global para TypeScript
 declare global {
@@ -15,7 +16,7 @@ declare global {
  */
 export default defineNuxtPlugin(() => {
   // API key para Google Maps
-  const apiKey = 'AIzaSyAic9di82x8C0qpgGF2qFpPFg3h2SRAIYw'
+  const apiKey = useRuntimeConfig()
   
   // Función para cargar Google Maps
   const loadGoogleMaps = (): Promise<void> => {
@@ -33,7 +34,7 @@ export default defineNuxtPlugin(() => {
 
       // Creamos y agregamos el script al head
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async&callback=initGoogleMaps`
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey.public.googleMapsApiKey}&libraries=places&loading=async&callback=initGoogleMaps`
       script.async = true
       script.defer = true
       

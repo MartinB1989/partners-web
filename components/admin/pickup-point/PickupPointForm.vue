@@ -12,6 +12,10 @@
         />
       </v-col>
       
+      <v-col cols="12">
+        <GooglePlaceAutocomplete @place-selected="handlePlaceSelected" />
+      </v-col>
+      
       <v-col cols="12" md="8">
         <v-text-field
           v-model="formData.street"
@@ -112,6 +116,8 @@
 <script setup lang="ts">
 import { ref, reactive, watch, defineProps, defineEmits } from 'vue'
 import type { PickupAddress } from '~/types/pickup-address'
+import GooglePlaceAutocomplete from '@/components/app/GooglePlaceAutocomplete.vue'
+import type { PlaceResult } from '@/types/google-maps'
 
 interface FormData {
   name: string
@@ -122,6 +128,8 @@ interface FormData {
   zipCode: string
   additionalInfo?: string
   isActive: boolean
+  latitude?: number
+  longitude?: number
 }
 
 const props = defineProps<{
@@ -148,7 +156,9 @@ const formData = reactive<FormData>({
   state: props.pickupPoint?.state || '',
   zipCode: props.pickupPoint?.zipCode || '',
   additionalInfo: props.pickupPoint?.additionalInfo || '',
-  isActive: props.pickupPoint?.isActive !== undefined ? props.pickupPoint.isActive : true
+  isActive: props.pickupPoint?.isActive !== undefined ? props.pickupPoint.isActive : true,
+  latitude: props.pickupPoint?.latitude,
+  longitude: props.pickupPoint?.longitude
 })
 
 // Actualizar formData si cambian los props
@@ -162,8 +172,53 @@ watch(() => props.pickupPoint, (newValue) => {
     formData.zipCode = newValue.zipCode || ''
     formData.additionalInfo = newValue.additionalInfo || ''
     formData.isActive = newValue.isActive !== undefined ? newValue.isActive : true
+    formData.latitude = newValue.latitude
+    formData.longitude = newValue.longitude
   }
 }, { deep: true })
+
+// Manejador para cuando se selecciona un lugar del autocompletado
+const handlePlaceSelected = (place: PlaceResult) => {
+  if (!place || !place.placeDetails) return
+  
+  // Guardar coordenadas
+  if (place.location) {
+    formData.latitude = place.location.lat
+    formData.longitude = place.location.lng
+  }
+  
+  const addressComponents = place.placeDetails.address_components || []
+  
+  // Extraer información de los componentes de dirección
+  let street = ''
+  let number = ''
+  let city = ''
+  let state = ''
+  let zipCode = ''
+  
+  addressComponents.forEach(component => {
+    const types = component.types
+    
+    if (types.includes('route')) {
+      street = component.long_name
+    } else if (types.includes('street_number')) {
+      number = component.long_name
+    } else if (types.includes('locality') || types.includes('sublocality')) {
+      city = component.long_name
+    } else if (types.includes('administrative_area_level_1')) {
+      state = component.long_name
+    } else if (types.includes('postal_code')) {
+      zipCode = component.long_name
+    }
+  })
+  
+  // Actualizar formData con la información extraída
+  if (street) formData.street = street
+  if (number) formData.number = number
+  if (city) formData.city = city
+  if (state) formData.state = state
+  if (zipCode) formData.zipCode = zipCode
+}
 
 const submitForm = () => {
   if (!isFormValid.value) return
@@ -176,4 +231,10 @@ defineExpose({
   isFormValid,
   formData
 })
-</script> 
+</script>
+
+<style scoped>
+.v-btn--size-small {
+  text-transform: none;
+}
+</style> 

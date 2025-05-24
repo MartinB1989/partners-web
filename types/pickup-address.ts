@@ -16,6 +16,8 @@ export interface PickupAddress {
   isActive: boolean
   userId: string
   user?: User | string
+  latitude?: number
+  longitude?: number
   createdAt: Date
   updatedAt: Date
 } 
