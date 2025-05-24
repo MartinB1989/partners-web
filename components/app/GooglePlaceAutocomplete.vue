@@ -14,24 +14,12 @@
 
 <script setup lang="ts">
 import { ref, onBeforeUnmount, onMounted } from 'vue'
-import type { AutocompleteOptions, GoogleAutocomplete, PlaceResult } from '@/types/google-maps'
+import type { GoogleAutocomplete, PlaceResult } from '@/types/google-maps'
+
 // Declaración de tipos para TypeScript
 declare global {
   interface Window {
-    initMap: () => void;
-    google: {
-      maps: {
-        places: {
-          Autocomplete: new (
-            input: HTMLInputElement, 
-            options?: AutocompleteOptions
-          ) => GoogleAutocomplete;
-        };
-        event: {
-          clearInstanceListeners: (instance: GoogleAutocomplete) => void;
-        };
-      };
-    };
+    initMap?: () => void;
   }
 }
 
@@ -40,56 +28,49 @@ const loading = ref(true)
 let autocomplete: GoogleAutocomplete | null = null
 
 // Usamos onMounted para asegurarnos de que el código solo se ejecute en el cliente
-onMounted(() => {
-  // Definimos la función de inicialización
-  window.initMap = () => {
+onMounted(async () => {
+  // Cargamos Google Maps usando el plugin
+  const { $googleMaps } = useNuxtApp()
+  
+  try {
+    // Esperamos a que Google Maps se cargue
+    await $googleMaps.load()
     loading.value = false
     
-    // Esperamos un poco para asegurarnos de que el DOM esté listo
-    setTimeout(() => {
-      // Creamos el autocomplete una vez que Google Maps esté cargado
-      const input = document.getElementById('autocomplete') as HTMLInputElement
-      if (!input) return
+    // Inicializamos el autocompletado una vez que Google Maps está cargado
+    const input = document.getElementById('autocomplete') as HTMLInputElement
+    if (!input) return
+    
+    autocomplete = new window.google!.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'ar' }, // Restringimos búsqueda a Argentina
+      fields: ['address_components', 'geometry', 'name', 'formatted_address'],
+    })
+    
+    // Evento que se dispara cuando el usuario selecciona un lugar
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete!.getPlace()
       
-      autocomplete = new window.google.maps.places.Autocomplete(input, {
-        componentRestrictions: { country: 'ar' }, // Restringimos búsqueda a Argentina
-        fields: ['address_components', 'geometry', 'name', 'formatted_address'],
-      })
-      
-      // Evento que se dispara cuando el usuario selecciona un lugar
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete!.getPlace()
-        
-        if (!place.geometry) {
-          // Si el usuario presiona Enter sin seleccionar un lugar de la lista
-          return
-        }
-        
-        // Actualizamos el valor del input con la dirección formateada
-        searchText.value = place.formatted_address
-        
-        // Aquí puedes emitir un evento con los datos del lugar seleccionado
-        emit('place-selected', {
-          address: place.formatted_address,
-          location: {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng()
-          },
-          placeDetails: place
-        })
-      })
-    }, 100)
-  }
-
-  // Cargamos el script de Google Maps
-  useHead({
-    script: [
-      {
-        src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAic9di82x8C0qpgGF2qFpPFg3h2SRAIYw&libraries=places&loading=async&callback=initMap',
-        async: true,
+      if (!place.geometry) {
+        // Si el usuario presiona Enter sin seleccionar un lugar de la lista
+        return
       }
-    ]
-  })
+      
+      // Actualizamos el valor del input con la dirección formateada
+      searchText.value = place.formatted_address
+      
+      // Aquí puedes emitir un evento con los datos del lugar seleccionado
+      emit('place-selected', {
+        address: place.formatted_address,
+        location: {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng()
+        },
+        placeDetails: place
+      })
+    })
+  } catch (error) {
+    console.error('Error al cargar Google Maps:', error)
+  }
 })
 
 // Limpiamos los recursos cuando el componente se desmonta

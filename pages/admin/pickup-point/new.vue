@@ -19,6 +19,11 @@
           </v-card-title>
           
           <v-card-text>
+            <v-row>
+              <v-col cols="12">
+                <GooglePlaceAutocomplete @place-selected="handlePlaceSelected" />
+              </v-col>
+            </v-row>
             <PickupPointForm
               :loading="loading"
               submit-button-text="Guardar punto de retiro"
@@ -27,11 +32,6 @@
             />
           </v-card-text>
         </v-card>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12">
-        <GooglePlaceAutocomplete @place-selected="handlePlaceSelected" />
       </v-col>
     </v-row>
     <v-snackbar
