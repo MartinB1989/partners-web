@@ -7,6 +7,7 @@ import type { DeliveryType } from './cart'
  * Estados posibles de una orden
  */
 export enum OrderStatus {
+  PENDING_PAYMENT = 'PENDING_PAYMENT',
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   SHIPPED = 'SHIPPED',
@@ -18,7 +19,7 @@ export enum OrderStatus {
  * Interfaz para la orden/pedido
  */
 export interface Order {
-  id: string
+  id?: string
   userId?: string
   user?: User
   addressId?: string
@@ -27,28 +28,27 @@ export interface Order {
   name: string
   phone?: string
   total: number
-  status: OrderStatus
+  status?: OrderStatus
   deliveryType: DeliveryType
   sessionId?: string
   notes?: string
   items: OrderItem[]
-  createdAt: Date
-  updatedAt: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 /**
  * Interfaz para los items de una orden
  */
 export interface OrderItem {
-  id: string
-  orderId: string
-  order: Order
+  id?: string
+  orderId?: string
+  order?: Order
   productId: number
-  product: Product
+  product?: Product
   title: string
-  price: number
+  unitPrice: number
+  subTotal: number
   quantity: number
   imageUrl?: string
-  createdAt: Date
-  updatedAt: Date
 } 

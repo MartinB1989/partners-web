@@ -19,8 +19,6 @@ export interface Cart {
   userId?: string       // Para usuarios registrados
   user?: User
   items: CartItem[]
-  createdAt: Date
-  updatedAt: Date
   address?: Address     // Dirección opcional para el envío
   addressId?: string
   deliveryType: DeliveryType
@@ -39,7 +37,5 @@ export interface CartItem {
   productId: number
   product: Product
   quantity: number
-  subtotal: number
-  createdAt: Date
-  updatedAt: Date
+  subTotal: number
 }
