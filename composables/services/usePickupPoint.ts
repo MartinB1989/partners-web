@@ -9,6 +9,11 @@ export const usePickupPoint = () => {
     return { data, error }
   }
 
+  const getPickupPointsPublic = async () => {
+    const { data, error } = await api.request<PickupAddress[]>('GET', '/pickup-addresses/public')
+    return { data, error }
+  }
+
   const getPickupPoint = async (id: number) => {
     const { data, error } = await api.request<PickupAddress>('GET', `/pickup-addresses/${id}`)
     return { data, error }
@@ -31,6 +36,7 @@ export const usePickupPoint = () => {
 
   return {
     getPickupPoints,
+    getPickupPointsPublic,
     getPickupPoint,
     createPickupPoint,
     updatePickupPoint,
