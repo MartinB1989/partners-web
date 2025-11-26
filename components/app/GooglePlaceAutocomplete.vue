@@ -3,7 +3,7 @@
     <v-text-field
       id="autocomplete"
       v-model="searchText"
-      placeholder="Ingresa una dirección"
+      placeholder="Busca una dirección"
       :loading="loading"
       variant="outlined"
       density="comfortable"

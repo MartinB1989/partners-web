@@ -40,7 +40,8 @@ import { ref, computed } from 'vue';
 import CheckoutForm from '~/components/checkout/CheckoutForm.vue';
 import CheckoutSummary from '~/components/checkout/CheckoutSummary.vue';
 import useOrder from '~/composables/services/useOrder';
-import type { Order } from '~/types/order';
+import { useAlertStore } from '~/stores/alert';
+import type { Address } from '~/types/address';
 
 // Defino la interfaz para el componente CheckoutForm
 interface CheckoutFormInstance {
@@ -51,6 +52,7 @@ interface CheckoutFormInstance {
     phone: string;
     notes: string;
     deliveryMethod: string;
+    shippingAddress?: Partial<Address>;
   };
 }
 
@@ -79,18 +81,40 @@ const confirmOrder = async () => {
   if (!formIsValid.value || !checkoutFormRef.value) {
     return;
   }
+
+  const alertStore = useAlertStore();
+  const { name, email, phone, notes, deliveryMethod, shippingAddress } = checkoutFormRef.value.formData;
+
+  // Validar que si el método es "delivery", la dirección es obligatoria
+  if (deliveryMethod === 'delivery' && !shippingAddress) {
+    alertStore.showAlert('La dirección de envío es obligatoria', 'error', 3000);
+    return;
+  }
+
   try {
-    const { name, email, phone, notes } = checkoutFormRef.value.formData;
     const order = currentCartToOrder(email, name, phone, notes);
-    
-    const { data, error } = await createOrder(order as Order);
-  
+
+    if (!order) {
+      alertStore.showAlert('Error al procesar la orden', 'error', 3000);
+      return;
+    }
+
+    // Si el método es "delivery", agregar la dirección a la orden
+    if (deliveryMethod === 'delivery' && shippingAddress) {
+      order.address = shippingAddress as Address;
+    }
+
+    const { data, error } = await createOrder(order);
+
     if (error) {
+      alertStore.showAlert('Error al crear la orden', 'error', 3000);
       console.error('Error al crear la orden:', error);
     } else {
+      alertStore.showAlert('Orden creada exitosamente', 'success', 3000);
       console.log('Orden generada:', data);
     }
   } catch (error) {
+    alertStore.showAlert('Error al crear la orden', 'error', 3000);
     console.error('Error al crear la orden:', error);
   }
 };

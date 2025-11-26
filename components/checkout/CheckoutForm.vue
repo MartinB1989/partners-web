@@ -57,6 +57,44 @@
             <v-radio value="pickup" label="Retiro en punto"/>
           </v-radio-group>
         </v-col>
+
+        <v-col v-if="formData.deliveryMethod === 'delivery'" cols="12">
+          <v-divider class="my-4"/>
+          <h3 class="text-subtitle-1 mb-4">Dirección de envío</h3>
+
+          <v-alert
+            v-if="formData.shippingAddress"
+            type="success"
+            variant="outlined"
+            class="mb-4"
+          >
+            <div class="font-weight-medium mb-2">Dirección confirmada:</div>
+            <div>{{ formatShippingAddress(formData.shippingAddress) }}</div>
+            <v-btn
+              size="small"
+              variant="text"
+              color="primary"
+              class="mt-2"
+              @click="handleEditShippingAddress"
+            >
+              Editar dirección
+            </v-btn>
+          </v-alert>
+
+          <ShippingAddressForm
+            v-if="!formData.shippingAddress || showShippingForm"
+            ref="shippingAddressForm"
+            :initial-data="formData.shippingAddress"
+            @submit="handleShippingAddressSubmit"
+            @cancel="handleShippingAddressCancel"
+          />
+        </v-col>
+
+        <v-col v-if="formData.deliveryMethod === 'pickup'" cols="12">
+          <v-divider class="my-4"/>
+          <h3 class="text-subtitle-1 mb-4">Punto de retiro</h3>
+          <!-- Aquí irá el componente para seleccionar punto de retiro -->
+        </v-col>
       </v-row>
     </v-container>
   </v-form>
@@ -64,6 +102,8 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import type { Address } from '~/types/address';
+import ShippingAddressForm from './ShippingAddressForm.vue';
 
 interface FormData {
   name: string;
@@ -71,9 +111,12 @@ interface FormData {
   phone: string;
   notes: string;
   deliveryMethod: string;
+  shippingAddress?: Partial<Address>;
 }
 
 const valid = ref(false);
+const shippingAddressForm = ref<InstanceType<typeof ShippingAddressForm> | null>(null);
+const showShippingForm = ref(false);
 
 const formData = reactive<FormData>({
   name: '',
@@ -81,6 +124,7 @@ const formData = reactive<FormData>({
   phone: '',
   notes: '',
   deliveryMethod: '',
+  shippingAddress: undefined,
 });
 
 const nameRules = [
@@ -102,8 +146,36 @@ const deliveryMethodRules = [
   (v: string) => !!v || 'Debe seleccionar un método de entrega',
 ];
 
+const formatShippingAddress = (address: Partial<Address>): string => {
+  const parts = [
+    address.street,
+    address.number,
+    address.city,
+    address.state,
+    address.zipCode
+  ].filter(Boolean);
+
+  return parts.join(', ');
+};
+
+const handleShippingAddressSubmit = (shippingData: Partial<Address>) => {
+  formData.shippingAddress = shippingData;
+  showShippingForm.value = false;
+};
+
+const handleShippingAddressCancel = () => {
+  formData.deliveryMethod = '';
+  formData.shippingAddress = undefined;
+  showShippingForm.value = false;
+};
+
+const handleEditShippingAddress = () => {
+  showShippingForm.value = true;
+};
+
 defineExpose({
   formData,
   valid,
+  shippingAddressForm,
 });
 </script> 
