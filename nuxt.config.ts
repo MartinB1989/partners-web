@@ -9,6 +9,11 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
       googleMapsApiKey: process.env.NUXT_GOOGLE_MAPS_API_KEY || '',
+      zipnovaApiToken: process.env.NUXT_PUBLIC_ZIPNOVA_API_TOKEN,
+      zipnovaApiSecret: process.env.NUXT_PUBLIC_ZIPNOVA_API_SECRET,
+      zipnovaAccountId: process.env.NUXT_ZIPNOVA_ACCOUNT_ID,
+      zipnovaOriginId: process.env.NUXT_ZIPNOVA_ORIGIN_ID,
+
     }
   },
   build: {

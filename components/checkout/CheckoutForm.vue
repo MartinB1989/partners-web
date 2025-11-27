@@ -114,6 +114,10 @@ interface FormData {
   shippingAddress?: Partial<Address>;
 }
 
+const emit = defineEmits<{
+  shippingAddressConfirmed: [address: Partial<Address>]
+}>();
+
 const valid = ref(false);
 const shippingAddressForm = ref<InstanceType<typeof ShippingAddressForm> | null>(null);
 const showShippingForm = ref(false);
@@ -161,6 +165,8 @@ const formatShippingAddress = (address: Partial<Address>): string => {
 const handleShippingAddressSubmit = (shippingData: Partial<Address>) => {
   formData.shippingAddress = shippingData;
   showShippingForm.value = false;
+  // Emitir evento cuando se confirma la dirección
+  emit('shippingAddressConfirmed', shippingData);
 };
 
 const handleShippingAddressCancel = () => {
