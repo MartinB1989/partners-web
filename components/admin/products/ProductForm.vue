@@ -61,8 +61,78 @@
               :rules="[v => !!v || 'La descripción es requerida']"
             />
           </v-col>
+
+          <v-col cols="12" md="6">
+            <v-text-field
+              v-model="productData.sku"
+              label="SKU"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => !!v || 'El SKU es requerido']"
+            />
+          </v-col>
+
+          <!-- Sección de dimensiones y peso -->
+          <v-col cols="12">
+            <v-divider class="my-4"/>
+            <p class="text-subtitle2 mb-4">Dimensiones y Peso</p>
+          </v-col>
+
+          <v-col cols="12" sm="6" md="3">
+            <v-text-field
+              v-model.number="productData.size.weight"
+              label="Peso (kg)"
+              type="number"
+              min="0"
+              step="0.01"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => v > 0 || 'El peso es requerido y debe ser mayor a 0']"
+            />
+          </v-col>
+
+          <v-col cols="12" sm="6" md="3">
+            <v-text-field
+              v-model.number="productData.size.length"
+              label="Largo (cm)"
+              type="number"
+              min="0"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => v > 0 || 'El largo es requerido y debe ser mayor a 0']"
+            />
+          </v-col>
+
+          <v-col cols="12" sm="6" md="3">
+            <v-text-field
+              v-model.number="productData.size.height"
+              label="Alto (cm)"
+              type="number"
+              min="0"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => v > 0 || 'El alto es requerido y debe ser mayor a 0']"
+            />
+          </v-col>
+
+          <v-col cols="12" sm="6" md="3">
+            <v-text-field
+              v-model.number="productData.size.width"
+              label="Ancho (cm)"
+              type="number"
+              min="0"
+              required
+              variant="outlined"
+              class="mb-4"
+              :rules="[v => v > 0 || 'El ancho es requerido y debe ser mayor a 0']"
+            />
+          </v-col>
         </v-row>
-        
+
         <!-- Selector de categorías -->
         <v-divider class="mb-4"/>
         
@@ -147,15 +217,28 @@ const productData = ref({
   price: props.initialData.price,
   stock: props.initialData.stock,
   active: props.initialData.active,
-  categoryIds: props.initialData.categoryIds || []
+  categoryIds: props.initialData.categoryIds || [],
+  sku: props.initialData.sku || '',
+  size: {
+    weight: props.initialData.size?.weight || 0,
+    length: props.initialData.size?.length || 0,
+    height: props.initialData.size?.height || 0,
+    width: props.initialData.size?.width || 0
+  }
 })
 
 const isFormValid = computed(() => {
-  return productData.value.title && 
-         productData.value.description && 
-         productData.value.price > 0 && 
+  const { size } = productData.value
+  return productData.value.title &&
+         productData.value.description &&
+         productData.value.price > 0 &&
          productData.value.stock >= 0 &&
-         productData.value.categoryIds.length > 0
+         productData.value.categoryIds.length > 0 &&
+         productData.value.sku &&
+         size.weight > 0 &&
+         size.length > 0 &&
+         size.height > 0 &&
+         size.width > 0
 })
 
 const handleCategoriesChange = (selectedCategories) => {

@@ -100,6 +100,13 @@ const product = ref<Product>({
   price: 0,
   stock: 0,
   active: false,
+  sku: '',
+  size: {
+    weight: 0,
+    length: 0,
+    height: 0,
+    width: 0
+  },
   images: []
 })
 
@@ -134,6 +141,8 @@ const handleFormContinue = async (productData: Product) => {
     price: productData.price,
     stock: productData.stock,
     active: productData.active,
+    sku: productData.sku,
+    size: productData.size,
     categoryIds: productData.categoryIds || []
   }
   

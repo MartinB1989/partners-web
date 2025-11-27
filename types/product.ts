@@ -1,9 +1,18 @@
+export interface ProductSize {
+  weight: number
+  length: number
+  height: number
+  width: number
+}
+
 export interface Product {
   title: string
   description: string
   price: number
   stock: number
   active: boolean
+  sku: string
+  size: ProductSize
   id?: string
   images?: ProductImage[]
   categoryIds?: number[]

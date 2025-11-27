@@ -95,7 +95,14 @@ const product = ref({
   price: 0,
   stock: 0,
   active: true,
-  categoryIds: []
+  categoryIds: [],
+  sku: '',
+  size: {
+    weight: 0,
+    length: 0,
+    height: 0,
+    width: 0
+  }
 })
 
 const loading = ref(false)
