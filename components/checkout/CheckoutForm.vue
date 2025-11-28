@@ -101,9 +101,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import type { Address } from '~/types/address';
+import { DeliveryType } from '~/types/cart';
 import ShippingAddressForm from './ShippingAddressForm.vue';
+import { useCartStore } from '~/stores/cart';
 
 interface FormData {
   name: string;
@@ -121,6 +123,7 @@ const emit = defineEmits<{
 const valid = ref(false);
 const shippingAddressForm = ref<InstanceType<typeof ShippingAddressForm> | null>(null);
 const showShippingForm = ref(false);
+const cartStore = useCartStore();
 
 const formData = reactive<FormData>({
   name: '',
@@ -130,6 +133,16 @@ const formData = reactive<FormData>({
   deliveryMethod: '',
   shippingAddress: undefined,
 });
+
+// Actualizar el deliveryType del carrito cuando cambia el método de entrega
+watch(
+  () => formData.deliveryMethod,
+  (newMethod) => {
+    if (cartStore.cart && newMethod) {
+      cartStore.cart.deliveryType = newMethod === 'delivery' ? DeliveryType.SHIPPING : DeliveryType.PICKUP;
+    }
+  }
+);
 
 const nameRules = [
   (v: string) => !!v || 'El nombre es requerido',

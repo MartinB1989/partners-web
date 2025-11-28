@@ -132,16 +132,16 @@ const confirmOrder = async () => {
   }
 
   try {
+    // Si es delivery, actualizar la dirección del carrito antes de crear la orden
+    if (deliveryMethod === 'delivery' && shippingAddress && cartStore.cart) {
+      cartStore.cart.address = shippingAddress as Address;
+    }
+
     const order = currentCartToOrder(email, name, phone, notes);
 
     if (!order) {
       alertStore.showAlert('Error al procesar la orden', 'error', 3000);
       return;
-    }
-
-    // Si el método es "delivery", agregar la dirección a la orden
-    if (deliveryMethod === 'delivery' && shippingAddress) {
-      order.address = shippingAddress as Address;
     }
 
     const { data, error } = await createOrder(order);
