@@ -54,7 +54,7 @@
               <div class="text-subtitle-1 mb-2">Método de entrega</div>
             </template>
             <v-radio value="delivery" label="Envío a domicilio"/>
-            <v-radio value="pickup" label="Retiro en punto"/>
+            <v-radio value="pickup" label="Retiro en persona"/>
           </v-radio-group>
         </v-col>
 
@@ -92,8 +92,15 @@
 
         <v-col v-if="formData.deliveryMethod === 'pickup'" cols="12">
           <v-divider class="my-4"/>
-          <h3 class="text-subtitle-1 mb-4">Punto de retiro</h3>
-          <!-- Aquí irá el componente para seleccionar punto de retiro -->
+          <!-- Aquí irá el componente para seleccionar punto de retiro en el futuro-->
+          <v-alert
+            type="success"
+            variant="outlined"
+            class="mb-4"
+          >
+             <h3 class="text-subtitle-1 mb-4">Punto de retiro</h3>
+             <p>Retiras en <span class="font-weight-black">Jacobo Watt 1769, CP 1757, Gregorio de Laferrere, Buenos Aires</span></p>
+           </v-alert>
         </v-col>
       </v-row>
     </v-container>

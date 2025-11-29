@@ -85,7 +85,7 @@ watch(
   () => checkoutFormRef.value?.formData?.deliveryMethod,
   (newMethod) => {
     if (newMethod === deliveryTypes.PICKUP) {
-      // Si selecciona "Retiro en punto", resetear el precio de envío a 0
+      // Si selecciona "Retiro en persona", resetear el precio de envío a 0
       cartStore.setDeliveryPrice(0);
     }
   }

@@ -59,7 +59,7 @@
       class="mt-4"
       density="comfortable"
     >
-      Retiro en punto sin costo adicional
+      Retiro en persona sin costo adicional
     </v-alert>
   </v-card>
 </template>
