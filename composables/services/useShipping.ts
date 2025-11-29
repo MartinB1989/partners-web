@@ -25,6 +25,20 @@ interface ZipnovaShippingQuoteRequest {
 }
 
 /**
+ * Interface para la respuesta de cotización de Zipnova
+ */
+interface ZipnovaQuoteResponse {
+  all_results: Record<string, unknown>[]
+  results?: {
+    standard_delivery?: {
+      amounts?: {
+        price_incl_tax?: number
+      }
+    }
+  }
+}
+
+/**
  * Composable para consumir la API de Zipnova para cotizar envíos
  */
 export const useShipping = () => {
@@ -51,7 +65,7 @@ export const useShipping = () => {
    * @param items Items del carrito con sus dimensiones
    * @param shippingAddress Dirección de envío del cliente
    * @param totalValue Valor total del carrito
-   * @returns Respuesta de la cotización o error
+   * @returns Respuesta con el precio de envío (price_incl_tax) o error
    */
   const quoteShipping = async (
     items: CartItem[],
@@ -85,7 +99,7 @@ export const useShipping = () => {
         }))
       }
       // Llamar directamente a la API de Zipnova con autenticación básica
-      const response = await $fetch(
+      const response = await $fetch<ZipnovaQuoteResponse>(
         `${ZIPNOVA_API_BASE}/shipments/quote`,
         {
           method: 'POST',
@@ -98,10 +112,17 @@ export const useShipping = () => {
         }
       )
 
-      // Log de la respuesta para ajustar datos
-      console.log('Respuesta de cotización de Zipnova:', response)
+      // Extraer el precio de envío con impuestos (price_incl_tax) de standard_delivery
+      const deliveryPrice = response.results?.standard_delivery?.amounts?.price_incl_tax
 
-      return { data: response, error: null }
+      if (deliveryPrice === undefined) {
+        console.warn('No se encontró price_incl_tax en la respuesta de Zipnova:', response)
+      }
+
+      console.log('Respuesta de cotización de Zipnova:', response)
+      console.log('Precio de envío extraído (price_incl_tax):', deliveryPrice)
+
+      return { data: { ...response, deliveryPrice }, error: null }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
       console.error('Error al cotizar envío:', errorMessage)

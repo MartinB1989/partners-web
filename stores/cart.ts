@@ -53,6 +53,13 @@ export const useCartStore = defineStore('cart', {
       this.cart = null
       this.itemCount = 0
       this.loading = false
+    },
+
+    // Establece el precio de envío en el carrito
+    setDeliveryPrice(price: number) {
+      if (this.cart) {
+        this.cart.deliveryPrice = price
+      }
     }
   }
 })

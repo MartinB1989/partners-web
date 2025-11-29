@@ -22,7 +22,8 @@ export interface Cart {
   address?: Address     // Dirección opcional para el envío
   addressId?: string
   deliveryType: DeliveryType
-  
+  deliveryPrice?: number // Costo de envío obtenido de la API de Zipnova
+
   // Campos calculados por el backend
   total?: number
 }

@@ -51,6 +51,8 @@ export function useCartToOrder() {
       phone,
       total: cart.total || 0,
       deliveryType: cart.deliveryType,
+      // Solo incluir deliveryPrice si existe en el carrito (cuando es envío a domicilio)
+      ...(cart.deliveryPrice !== undefined ? { deliveryPrice: cart.deliveryPrice } : {}),
       notes,
       items: orderItems
     }

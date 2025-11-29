@@ -23,10 +23,11 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="4">
-        <CheckoutSummary 
+        <CheckoutSummary
           v-if="cartSummary"
-          :items="cartSummary.items" 
-          :delivery-method="getDeliveryMethod()" 
+          :items="cartSummary.items"
+          :delivery-method="getDeliveryMethod()"
+          :shipping-cost="cartStore.cart?.deliveryPrice || 0"
         />
         <v-card v-else class="pa-4">
           <v-card-text class="text-center">
@@ -39,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import CheckoutForm from '~/components/checkout/CheckoutForm.vue';
 import CheckoutSummary from '~/components/checkout/CheckoutSummary.vue';
 import useOrder from '~/composables/services/useOrder';
@@ -74,6 +75,22 @@ const formIsValid = computed(() => {
   return checkoutFormRef.value?.valid || false;
 });
 
+// Resetear deliveryPrice a 0 cuando se carga la página
+onMounted(() => {
+  cartStore.setDeliveryPrice(0);
+});
+
+// Watch para resetear deliveryPrice cuando cambia el método de entrega
+watch(
+  () => checkoutFormRef.value?.formData?.deliveryMethod,
+  (newMethod) => {
+    if (newMethod === deliveryTypes.PICKUP) {
+      // Si selecciona "Retiro en punto", resetear el precio de envío a 0
+      cartStore.setDeliveryPrice(0);
+    }
+  }
+);
+
 // Función para obtener el método de entrega con el tipo correcto
 const getDeliveryMethod = (): '' | 'delivery' | 'pickup' => {
   const method = checkoutFormRef.value?.formData?.deliveryMethod || '';
@@ -97,7 +114,7 @@ const handleShippingAddressConfirmed = async (shippingAddress: Partial<Address>)
 
   try {
     // Cotizar el envío con los datos del carrito y la dirección
-    const { error } = await quoteShipping(
+    const { data, error } = await quoteShipping(
       cartStore.cart.items,
       shippingAddress,
       cartStore.cart.total || 0
@@ -109,7 +126,14 @@ const handleShippingAddressConfirmed = async (shippingAddress: Partial<Address>)
       return;
     }
 
-    // La respuesta ya se loguea en el composable
+    // Setear el precio de envío en el carrito desde la respuesta de Zipnova
+    if (data && data.deliveryPrice !== undefined) {
+      cartStore.setDeliveryPrice(data.deliveryPrice);
+      console.log('Precio de envío actualizado en el carrito:', data.deliveryPrice);
+    } else {
+      console.warn('No se pudo obtener el precio de envío de la respuesta');
+    }
+
     console.log('Cotización completada exitosamente');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
