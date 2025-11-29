@@ -28,6 +28,7 @@ export interface Order {
   name: string
   phone?: string
   total: number
+  deliveryPrice?: number
   status?: OrderStatus
   deliveryType: DeliveryType
   sessionId?: string

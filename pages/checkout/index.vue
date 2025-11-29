@@ -46,6 +46,7 @@ import useOrder from '~/composables/services/useOrder';
 import { useShipping } from '~/composables/services/useShipping';
 import { useAlertStore } from '~/stores/alert';
 import { useCartStore } from '~/stores/cart';
+import { deliveryTypes } from '~/utils/index';
 import type { Address } from '~/types/address';
 
 // Defino la interfaz para el componente CheckoutForm
@@ -77,8 +78,8 @@ const formIsValid = computed(() => {
 const getDeliveryMethod = (): '' | 'delivery' | 'pickup' => {
   const method = checkoutFormRef.value?.formData?.deliveryMethod || '';
 
-  if (method === 'delivery' || method === 'pickup') {
-    return method;
+  if (method === deliveryTypes.DELIVERY || method === deliveryTypes.PICKUP) {
+    return method as '' | 'delivery' | 'pickup';
   }
 
   return '';
@@ -126,14 +127,14 @@ const confirmOrder = async () => {
   const { name, email, phone, notes, deliveryMethod, shippingAddress } = checkoutFormRef.value.formData;
 
   // Validar que si el método es "delivery", la dirección es obligatoria
-  if (deliveryMethod === 'delivery' && !shippingAddress) {
+  if (deliveryMethod === deliveryTypes.DELIVERY && !shippingAddress) {
     alertStore.showAlert('La dirección de envío es obligatoria', 'error', 3000);
     return;
   }
 
   try {
     // Si es delivery, actualizar la dirección del carrito antes de crear la orden
-    if (deliveryMethod === 'delivery' && shippingAddress && cartStore.cart) {
+    if (deliveryMethod === deliveryTypes.DELIVERY && shippingAddress && cartStore.cart) {
       cartStore.cart.address = shippingAddress as Address;
     }
 
