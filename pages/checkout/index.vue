@@ -14,7 +14,7 @@
             <v-btn
               color="primary"
               size="large"
-              :disabled="!formIsValid"
+              :disabled="!formIsValid || isLoadingShipping"
               @click="confirmOrder"
             >
               Procesar compra
@@ -28,6 +28,7 @@
           :items="cartSummary.items"
           :delivery-method="getDeliveryMethod()"
           :shipping-cost="cartStore.cart?.deliveryPrice || 0"
+          :is-loading-shipping="isLoadingShipping"
         />
         <v-card v-else class="pa-4">
           <v-card-text class="text-center">
@@ -73,6 +74,7 @@ const cartStore = useCartStore();
 const cartSummary = ref(getCartSummary());
 
 const checkoutFormRef = ref<CheckoutFormInstance | null>(null);
+const isLoadingShipping = ref(false);
 const formIsValid = computed(() => {
   return checkoutFormRef.value?.valid || false;
 });
@@ -115,6 +117,9 @@ const handleShippingAddressConfirmed = async (shippingAddress: Partial<Address>)
   }
 
   try {
+    // Iniciar el loader de envío
+    isLoadingShipping.value = true;
+
     // Cotizar el envío con los datos del carrito y la dirección
     const { data, error } = await quoteShipping(
       cartStore.cart.items,
@@ -125,6 +130,7 @@ const handleShippingAddressConfirmed = async (shippingAddress: Partial<Address>)
     if (error) {
       alertStore.showAlert('Error al cotizar envío', 'error', 3000);
       console.error('Error en cotización:', error);
+      isLoadingShipping.value = false;
       return;
     }
 
@@ -141,6 +147,9 @@ const handleShippingAddressConfirmed = async (shippingAddress: Partial<Address>)
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     alertStore.showAlert('Error al cotizar envío', 'error', 3000);
     console.error('Error:', errorMessage);
+  } finally {
+    // Detener el loader de envío
+    isLoadingShipping.value = false;
   }
 };
 

@@ -35,7 +35,16 @@
       
       <v-list-item v-if="deliveryMethod === 'delivery'" title="Envío">
         <template #append>
-          <div class="text-body-1">
+          <div v-if="isLoadingShipping" class="d-flex align-center gap-2">
+            <v-progress-circular
+              size="20"
+              width="2"
+              indeterminate
+              color="primary"
+            />
+            <span class="text-caption">Cotizando...</span>
+          </div>
+          <div v-else class="text-body-1">
             <CurrencyDisplay :amount="shippingCost" />
           </div>
         </template>
@@ -80,10 +89,12 @@ interface Props {
   items: CartItem[];
   deliveryMethod: 'delivery' | 'pickup' | '';
   shippingCost?: number;
+  isLoadingShipping?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  shippingCost: 1500, // Costo de envío predeterminado en pesos argentinos
+  shippingCost: 0,
+  isLoadingShipping: false,
 });
 
 const subtotal = computed(() => {
