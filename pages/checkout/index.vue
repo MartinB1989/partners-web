@@ -41,6 +41,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import CheckoutForm from '~/components/checkout/CheckoutForm.vue';
 import CheckoutSummary from '~/components/checkout/CheckoutSummary.vue';
 import useOrder from '~/composables/services/useOrder';
@@ -64,6 +65,7 @@ interface CheckoutFormInstance {
 }
 
 // Usamos el composable para obtener los datos del carrito
+const router = useRouter();
 const { getCartSummary, currentCartToOrder } = useCartToOrder();
 const { createOrder } = useOrder();
 const { quoteShipping } = useShipping();
@@ -177,6 +179,7 @@ const confirmOrder = async () => {
     } else {
       alertStore.showAlert('Orden creada exitosamente', 'success', 3000);
       console.log('Orden generada:', data);
+      await router.push('/checkout/success');
     }
   } catch (error) {
     alertStore.showAlert('Error al crear la orden', 'error', 3000);
