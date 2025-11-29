@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <ClientOnly>
     <!-- Barra de navegación superior -->
     <v-app-bar
       app
@@ -73,6 +74,7 @@
         <slot />
       </v-container>
     </v-main>
+  </ClientOnly>
   </v-app>
 </template>
 

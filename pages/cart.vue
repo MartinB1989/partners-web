@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <ClientOnly>
     <h1 class="text-h4 mb-4">Mi Carrito</h1>
 
     <v-card v-if="loading" class="pa-4 mb-4">
@@ -98,6 +99,7 @@
         Ir a la tienda
       </v-btn>
     </v-card>
+  </ClientOnly>
   </v-container>
 </template>
 

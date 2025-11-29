@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <ClientOnly>
     <v-row>
       <v-col cols="12" md="8">
         <v-card class="pa-4">
@@ -37,6 +38,7 @@
         </v-card>
       </v-col>
     </v-row>
+  </ClientOnly>
   </v-container>
 </template>
 

@@ -1,5 +1,6 @@
 <template>
   <v-card class="pa-4">
+    <ClientOnly>
     <v-card-title class="text-h5 mb-4">Resumen de compra</v-card-title>
     
     <v-list lines="two">
@@ -70,6 +71,7 @@
     >
       Retiro en persona sin costo adicional
     </v-alert>
+  </ClientOnly>
   </v-card>
 </template>
 

@@ -31,9 +31,9 @@ import AppNavigationMenu from '~/components/app/AppNavigationMenu.vue';
 </script>
 
 <style scoped>
-.app-navigation {
-  margin-top: 64px; /* Altura predeterminada del app-bar */
-}
+/* .app-navigation {
+  margin-top: 64px; Altura predeterminada del app-bar
+} */
 
 @media (max-width: 600px) {
   .app-navigation {

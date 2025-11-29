@@ -1,20 +1,22 @@
 <template>
   <div class="cart-indicator mr-4">
-    <v-badge
-      :content="cartStore.totalItems.toString()"
-      :value="cartStore.totalItems"
-      color="red"
-      overlap
-    >
-      <v-btn
-        icon
-        variant="text"
-        :to="{ name: 'cart' }"
-        :disabled="cartStore.loading"
+    <ClientOnly>
+      <v-badge
+        :content="cartStore.totalItems.toString()"
+        :value="cartStore.totalItems"
+        color="red"
+        overlap
       >
-        <v-icon>mdi-cart</v-icon>
-      </v-btn>
-    </v-badge>
+        <v-btn
+          icon
+          variant="text"
+          :to="{ name: 'cart' }"
+          :disabled="cartStore.loading"
+        >
+          <v-icon>mdi-cart</v-icon>
+        </v-btn>
+      </v-badge>
+    </ClientOnly>
   </div>
 </template>
 
