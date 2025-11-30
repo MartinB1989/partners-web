@@ -37,6 +37,12 @@ export function useItemMenu() {
       icon: 'mdi-map-marker-outline', 
       to: '/admin/pickup-point',
       roles: adminOnly
+    },
+    {
+      title: 'Ordenes', 
+      icon: 'mdi-sale', 
+      to: '/admin/orders',
+      roles: adminOnly
     }
   ])
   

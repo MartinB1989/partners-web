@@ -29,7 +29,11 @@ const useOrder = () => {
     return await api.request<ListResponse<OrderSummary>>('GET', `/orders?page=${page}&limit=${limit}`);
   };
 
-  return { createOrder, getOrders };
+  const getOrderById = async (orderId: number) => {
+    return await api.request<Order>('GET', `/orders/${orderId}`);
+  };
+
+  return { createOrder, getOrders, getOrderById };
 };
 
 export default useOrder;

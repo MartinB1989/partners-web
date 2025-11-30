@@ -117,9 +117,8 @@ const loadOrders = async (): Promise<void> => {
   }
 }
 
-const viewOrder = (_order: OrderSummary): void => {
-  // TODO: Navegar a la página de detalle de la orden cuando esté disponible
-  alertStore.showAlert('El detalle de la orden aún no está disponible', 'info')
+const viewOrder = (order: OrderSummary): void => {
+  router.push(`/admin/orders/detail?id=${order.id}`)
 }
 
 onMounted(() => {

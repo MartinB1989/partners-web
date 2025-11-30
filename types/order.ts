@@ -42,10 +42,12 @@ export interface Order {
   phone?: string
   total: number
   deliveryPrice?: number
+  itemsPriceSum?: number
   status?: OrderStatus
   deliveryType: DeliveryType
   sessionId?: string
   notes?: string
+  orderNumber: string
   items: OrderItem[]
   createdAt?: Date
   updatedAt?: Date
