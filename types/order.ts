@@ -16,6 +16,19 @@ export enum OrderStatus {
 }
 
 /**
+ * Interfaz para resumen de órdenes (usado en listados)
+ */
+export interface OrderSummary {
+  id: number
+  orderNumber: string
+  finalTotal: number
+  deliveryType: string
+  status: string
+  createdAt: string
+  itemsCount: number
+}
+
+/**
  * Interfaz para la orden/pedido
  */
 export interface Order {

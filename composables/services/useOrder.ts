@@ -1,5 +1,6 @@
 import { useApi } from "~/composables/useApi";
-import type { Order } from "~/types/order";
+import type { Order, OrderSummary } from "~/types/order";
+import type { ListResponse } from "~/types/api-response";
 import { useCartStore } from "~/stores/cart";
 import { useCart } from "~/composables/services/useCart";
 
@@ -24,7 +25,11 @@ const useOrder = () => {
     return { data, error };
   };
 
-  return { createOrder };
+  const getOrders = async (page = 1, limit = 10) => {
+    return await api.request<ListResponse<OrderSummary>>('GET', `/orders?page=${page}&limit=${limit}`);
+  };
+
+  return { createOrder, getOrders };
 };
 
 export default useOrder;
