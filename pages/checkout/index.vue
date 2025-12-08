@@ -38,6 +38,12 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Modal de procesamiento de pago -->
+    <PaymentProcessingModal
+      v-model="showProcessingModal"
+      :step="processingStep"
+    />
   </ClientOnly>
   </v-container>
 </template>
@@ -47,6 +53,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import CheckoutForm from '~/components/checkout/CheckoutForm.vue';
 import CheckoutSummary from '~/components/checkout/CheckoutSummary.vue';
+import PaymentProcessingModal from '~/components/checkout/PaymentProcessingModal.vue';
 import useOrder from '~/composables/services/useOrder';
 import { useShipping } from '~/composables/services/useShipping';
 import { useAlertStore } from '~/stores/alert';
@@ -77,6 +84,8 @@ const cartSummary = ref(getCartSummary());
 
 const checkoutFormRef = ref<CheckoutFormInstance | null>(null);
 const isLoadingShipping = ref(false);
+const showProcessingModal = ref(false);
+const processingStep = ref<'creating' | 'redirecting'>('creating');
 const formIsValid = computed(() => {
   return checkoutFormRef.value?.valid || false;
 });
@@ -170,6 +179,10 @@ const confirmOrder = async () => {
   }
 
   try {
+    // Mostrar el modal con el estado "creando orden"
+    showProcessingModal.value = true;
+    processingStep.value = 'creating';
+
     // Si es delivery, actualizar la dirección del carrito antes de crear la orden
     if (deliveryMethod === deliveryTypes.DELIVERY && shippingAddress && cartStore.cart) {
       cartStore.cart.address = shippingAddress as Address;
@@ -178,6 +191,7 @@ const confirmOrder = async () => {
     const order = currentCartToOrder(email, name, phone, notes);
 
     if (!order) {
+      showProcessingModal.value = false;
       alertStore.showAlert('Error al procesar la orden', 'error', 3000);
       return;
     }
@@ -185,14 +199,31 @@ const confirmOrder = async () => {
     const { data, error } = await createOrder(order);
 
     if (error) {
+      showProcessingModal.value = false;
       alertStore.showAlert('Error al crear la orden', 'error', 3000);
       console.error('Error al crear la orden:', error);
+      return;
+    }
+
+    // Verificar si existe el initPoint en la respuesta
+    if (data && data.payment && data.payment.initPoint) {
+      // Cambiar el estado del modal a "redireccionando"
+      processingStep.value = 'redirecting';
+
+      // Esperar 3 segundos antes de redireccionar
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Redireccionar al initPoint de Mercado Pago
+      window.location.href = data.payment.initPoint;
     } else {
+      // Si no hay initPoint, cerrar el modal y mostrar mensaje de éxito
+      showProcessingModal.value = false;
       alertStore.showAlert('Orden creada exitosamente', 'success', 3000);
       console.log('Orden generada:', data);
       await router.push('/checkout/success');
     }
   } catch (error) {
+    showProcessingModal.value = false;
     alertStore.showAlert('Error al crear la orden', 'error', 3000);
     console.error('Error al crear la orden:', error);
   }

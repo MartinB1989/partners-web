@@ -29,6 +29,14 @@ export interface OrderSummary {
 }
 
 /**
+ * Interfaz para información de pago de Mercado Pago
+ */
+export interface PaymentInfo {
+  initPoint: string
+  preferenceId?: string
+}
+
+/**
  * Interfaz para la orden/pedido
  */
 export interface Order {
@@ -49,6 +57,7 @@ export interface Order {
   notes?: string
   orderNumber: string
   items: OrderItem[]
+  payment?: PaymentInfo
   createdAt?: Date
   updatedAt?: Date
 }
