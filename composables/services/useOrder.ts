@@ -1,5 +1,6 @@
 import { useApi } from "~/composables/useApi";
-import type { Order, OrderSummary } from "~/types/order";
+import type { OrderStatus, Order, OrderSummary } from "~/types/order";
+
 import type { ListResponse } from "~/types/api-response";
 import { useCartStore } from "~/stores/cart";
 import { useCart } from "~/composables/services/useCart";
@@ -33,7 +34,12 @@ const useOrder = () => {
     return await api.request<Order>('GET', `/orders/${orderId}`);
   };
 
-  return { createOrder, getOrders, getOrderById };
+  const updateOrderStatus = async (orderId: number, status: OrderStatus) => {
+    const { data, error } = await api.request<{ status: OrderStatus }>('PATCH', `/orders/${orderId}/status`, {status})
+    return { data, error}
+  }
+
+  return { createOrder, getOrders, getOrderById, updateOrderStatus };
 };
 
 export default useOrder;

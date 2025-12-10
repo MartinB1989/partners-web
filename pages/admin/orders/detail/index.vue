@@ -39,13 +39,56 @@
                     <p class="text-body1">{{ order.id }}</p>
                   </div>
                   <div class="mb-4">
-                    <label class="text-subtitle2 font-weight-bold">Estado</label>
+                    <label class="text-subtitle2 font-weight-bold d-block mb-2">Estado</label>
                     <v-chip
-                      :color="getStatusColor(order.status || '')"
-                      size="small"
+                      color="warning"
+                      size="large"
+                      class="mb-4"
                     >
-                      {{ getStatusLabel(order.status || '') }}
+                      {{ order.status ? getFriendlyStatus(order.status) : 'Sin estado' }}
                     </v-chip>
+
+                    <!-- Botones de cambio de estado -->
+                    <div class="d-flex flex-wrap">
+                      <v-btn
+                        v-if="order.status === OrderStatus.PENDING"
+                        color="info"
+                        size="small"
+                        class="mr-2 mb-2"
+                        @click="openConfirmationModal(OrderStatus.PROCESSING)"
+                      >
+                        Preparar pedido
+                      </v-btn>
+
+                      <v-btn
+                        v-if="order.status === OrderStatus.PROCESSING"
+                        color="primary"
+                        size="small"
+                        class="mr-2 mb-2"
+                        @click="openConfirmationModal(OrderStatus.SHIPPED)"
+                      >
+                        Enviado
+                      </v-btn>
+
+                      <v-btn
+                        v-if="order.status === OrderStatus.SHIPPED"
+                        color="success"
+                        size="small"
+                        class="mr-2 mb-2"
+                        @click="openConfirmationModal(OrderStatus.DELIVERED)"
+                      >
+                        Entregado
+                      </v-btn>
+
+                      <v-btn
+                        color="error"
+                        size="small"
+                        class="mr-2 mb-2"
+                        @click="openConfirmationModal(OrderStatus.CANCELLED)"
+                      >
+                        Cancelar orden
+                      </v-btn>
+                    </div>
                   </div>
                 </v-col>
                 <v-col cols="12" md="6">
@@ -221,15 +264,52 @@
         />
       </v-col>
     </v-row>
+
+    <!-- Modal de confirmación -->
+    <v-dialog
+      v-model="showConfirmationModal"
+      max-width="500"
+      persistent
+    >
+      <v-card>
+        <v-card-title class="text-h5">
+          ¿Está seguro?
+        </v-card-title>
+        <v-card-text>
+          Esta acción es irreversible, cambiará el estado de la orden a "{{ pendingStatus ? getFriendlyStatus(pendingStatus) : 'Sin estado' }}".
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="text"
+            :disabled="updatingStatus"
+            @click="closeConfirmationModal"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            :loading="updatingStatus"
+            @click="confirmStatusChange"
+          >
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import type { Order, OrderStatus } from '~/types/order'
+import { OrderStatus } from '~/types/order'
+import type { Order } from '~/types/order'
 import useOrder from '~/composables/services/useOrder'
 import { useAlertStore } from '~/stores/alert'
 import { useCurrency } from '~/composables/useCurrency'
 import { useRouter, useRoute } from 'vue-router'
+import { getFriendlyStatus } from '~/utils'
 
 definePageMeta({
   layout: 'admin',
@@ -237,13 +317,18 @@ definePageMeta({
 
 const router = useRouter()
 const route = useRoute()
-const { getOrderById } = useOrder()
+const { getOrderById, updateOrderStatus } = useOrder()
 const alertStore = useAlertStore()
 const { formatToCurrency } = useCurrency()
 
 const order = ref<Order | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+// Estados para el modal de confirmación
+const showConfirmationModal = ref(false)
+const pendingStatus = ref<OrderStatus | null>(null)
+const updatingStatus = ref(false)
 
 const formatDate = (dateString?: Date | string): string => {
   if (!dateString) return 'No especificado'
@@ -254,30 +339,6 @@ const formatDate = (dateString?: Date | string): string => {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-const getStatusColor = (status: OrderStatus | string): string => {
-  const statusColors: Record<string, string> = {
-    PENDING_PAYMENT: 'warning',
-    PENDING: 'info',
-    PROCESSING: 'info',
-    SHIPPED: 'primary',
-    DELIVERED: 'success',
-    CANCELLED: 'error',
-  }
-  return statusColors[status] || 'grey'
-}
-
-const getStatusLabel = (status: OrderStatus | string): string => {
-  const statusLabels: Record<string, string> = {
-    PENDING_PAYMENT: 'Pendiente de Pago',
-    PENDING: 'Pendiente',
-    PROCESSING: 'En Proceso',
-    SHIPPED: 'Enviado',
-    DELIVERED: 'Entregado',
-    CANCELLED: 'Cancelado',
-  }
-  return statusLabels[status] || status
 }
 
 const getDeliveryTypeLabel = (deliveryType: string): string => {
@@ -315,6 +376,49 @@ const loadOrder = async (): Promise<void> => {
     alertStore.showAlert('Error inesperado al cargar la orden', 'error')
   } finally {
     loading.value = false
+  }
+}
+
+const openConfirmationModal = (newStatus: OrderStatus): void => {
+  pendingStatus.value = newStatus
+  showConfirmationModal.value = true
+}
+
+const closeConfirmationModal = (): void => {
+  if (!updatingStatus.value) {
+    showConfirmationModal.value = false
+    pendingStatus.value = null
+  }
+}
+
+const confirmStatusChange = async (): Promise<void> => {
+  if (!order.value || !pendingStatus.value) return
+
+  updatingStatus.value = true
+
+  try {
+    const { data, error: apiError } = await updateOrderStatus(
+      Number(order.value.id),
+      pendingStatus.value
+    )
+
+    if (apiError) {
+      alertStore.showAlert(apiError, 'error')
+      return
+    }
+
+    if (data && data.status) {
+      // Actualizar el estado de la orden en la UI
+      order.value.status = data.status
+      alertStore.showAlert('Estado de la orden actualizado correctamente', 'success')
+      showConfirmationModal.value = false
+      pendingStatus.value = null
+    }
+  } catch (err) {
+    alertStore.showAlert('Error inesperado al actualizar el estado', 'error')
+    console.error('Error:', err)
+  } finally {
+    updatingStatus.value = false
   }
 }
 
