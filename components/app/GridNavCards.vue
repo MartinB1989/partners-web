@@ -40,6 +40,32 @@ defineProps<{
   gap: 2rem;
   margin-top: 2rem;
   justify-items: center;
+  width: 100%;
+}
+
+@media (max-width: 1280px) {
+  .nav-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 960px) {
+  .nav-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .nav-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .nav-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 h1 {

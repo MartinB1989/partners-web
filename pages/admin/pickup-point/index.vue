@@ -2,13 +2,13 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center align-start mb-4 ga-3">
           <h1 class="text-h4">Puntos de Retiro</h1>
-          <div>
+          <div class="d-flex flex-column flex-sm-row ga-2 buttons-container">
             <v-btn
               variant="outlined"
-              class="mr-2"
               prepend-icon="mdi-arrow-left"
+              class="action-btn"
               to="/admin/panel"
             >
               Atrás
@@ -16,9 +16,10 @@
             <v-btn
               color="primary"
               prepend-icon="mdi-plus"
+              class="action-btn"
               to="/admin/pickup-point/new"
             >
-              Crear nuevo punto de retiro
+              Crear
             </v-btn>
           </div>
         </div>
@@ -164,3 +165,25 @@ onMounted(() => {
   loadPickupPoints()
 })
 </script>
+
+<style scoped>
+.buttons-container {
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .buttons-container {
+    width: auto;
+  }
+}
+
+.action-btn {
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .action-btn {
+    width: auto;
+  }
+}
+</style>
