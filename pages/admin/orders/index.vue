@@ -24,7 +24,7 @@
                 :color="getStatusColor(item.status)"
                 size="small"
               >
-                {{ item.status }}
+                {{ getFriendlyStatus(item.status as OrderStatus) }}
               </v-chip>
             </template>
 
@@ -53,7 +53,7 @@
 
 <script setup lang="ts">
 import useOrder from '~/composables/services/useOrder'
-import type { OrderSummary } from '~/types/order'
+import type { OrderStatus, OrderSummary } from '~/types/order'
 import { useAlertStore } from '~/stores/alert'
 import { useRouter } from 'vue-router'
 import { useCurrency } from '~/composables/useCurrency'
