@@ -21,6 +21,26 @@
         </v-col>
       </v-row>
 
+      <!-- Loader mientras cargan los productos -->
+      <v-row v-else-if="loading" justify="center" class="my-8">
+        <v-col cols="12" class="text-center">
+          <v-progress-circular
+            indeterminate
+            color="primary"
+            size="64"
+          />
+          <div class="text-h6 mt-4">Cargando productos...</div>
+        </v-col>
+      </v-row>
+
+      <!-- Mensaje si no hay productos -->
+      <v-row v-else-if="!loading && products.length === 0" justify="center" class="my-8">
+        <v-col cols="12" class="text-center">
+          <v-icon icon="mdi-alert-circle-outline" size="64" color="grey"/>
+          <div class="text-h6 mt-4">No se encontraron productos</div>
+        </v-col>
+      </v-row>
+
       <!-- Contenido principal con productos -->
       <template v-else>
         <v-data-iterator
@@ -59,14 +79,6 @@
             </div>
           </template>
         </v-data-iterator>
-
-        <!-- Mensaje si no hay productos -->
-        <v-row v-if="products.length === 0" justify="center" class="my-8">
-          <v-col cols="12" class="text-center">
-            <v-icon icon="mdi-alert-circle-outline" size="64" color="grey"/>
-            <div class="text-h6 mt-4">No se encontraron productos</div>
-          </v-col>
-        </v-row>
       </template>
     </v-container>
   </div>
@@ -84,6 +96,7 @@ import type { Product } from '~/types/product';
 // Variables de estado
 const products = ref<Product[]>([]);
 const error = ref<string | null>(null);
+const loading = ref(true);
 const currentPage = ref(1);
 const itemsPerPage = ref(12);
 const totalItems = ref(0);
@@ -99,6 +112,7 @@ const totalPages = computed(() => {
 
 // Función para cargar productos
 async function loadProducts() {
+  loading.value = true;
   loaderStore.startLoading('Cargando productos...');
   error.value = null;
 
@@ -120,6 +134,7 @@ async function loadProducts() {
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Error al cargar productos';
   } finally {
+    loading.value = false;
     loaderStore.stopLoading();
   }
 }
