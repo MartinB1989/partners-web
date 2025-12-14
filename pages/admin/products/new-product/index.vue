@@ -133,9 +133,7 @@ const handleSave = async (imagesData) => {
     
     // Si hay imágenes para procesar
     if (imagesData && imagesData.length > 0) {
-      console.log('Producto creado:', data)
-      const uploadResults = await uploadProductImages(productId, imagesData)
-      console.log('Imágenes subidas:', uploadResults.length)
+      await uploadProductImages(productId, imagesData)
     }
     
     alertStore.showAlert('Producto creado correctamente', 'success')
