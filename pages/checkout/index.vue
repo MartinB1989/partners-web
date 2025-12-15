@@ -7,6 +7,7 @@
           <v-card-title class="text-h5 mb-4">Datos de compra</v-card-title>
           <CheckoutForm
             ref="checkoutFormRef"
+            :is-loading-shipping="isLoadingShipping"
             @shipping-address-confirmed="handleShippingAddressConfirmed"
           />
           <v-divider class="my-4"/>
@@ -91,7 +92,14 @@ const formIsValid = computed(() => {
 });
 
 // Resetear deliveryPrice a 0 cuando se carga la página
+// y redirigir a /cart si el carrito está vacío
 onMounted(() => {
+  // Verificar si el carrito está vacío
+  if (!cartStore.cart || !cartStore.cart.items || cartStore.cart.items.length === 0) {
+    router.push('/cart');
+    return;
+  }
+
   cartStore.setDeliveryPrice(0);
 });
 

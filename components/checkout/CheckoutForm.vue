@@ -49,6 +49,7 @@
             inline
             required
             :rules="deliveryMethodRules"
+            :disabled="isLoadingShipping"
           >
             <template #label>
               <div class="text-subtitle-1 mb-2">Método de entrega</div>
@@ -123,6 +124,10 @@ interface FormData {
   shippingAddress?: Partial<Address>;
 }
 
+const props = defineProps<{
+  isLoadingShipping: boolean;
+}>();
+
 const emit = defineEmits<{
   shippingAddressConfirmed: [address: Partial<Address>]
 }>();
@@ -142,11 +147,18 @@ const formData = reactive<FormData>({
 });
 
 // Actualizar el deliveryType del carrito cuando cambia el método de entrega
+// y resetear la dirección si selecciona "Retiro en persona"
 watch(
   () => formData.deliveryMethod,
   (newMethod) => {
     if (cartStore.cart && newMethod) {
       cartStore.cart.deliveryType = newMethod === 'delivery' ? DeliveryType.SHIPPING : DeliveryType.PICKUP;
+
+      // Si selecciona "Retiro en persona", resetear la dirección
+      if (newMethod === 'pickup') {
+        formData.shippingAddress = undefined;
+        showShippingForm.value = false;
+      }
     }
   }
 );
