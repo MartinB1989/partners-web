@@ -13,12 +13,15 @@
           </v-btn>
         </div>
         <v-card>
-          <v-data-table
+          <v-data-table-server
             :headers="headers"
             :items="orders"
             :loading="loading"
+            :items-length="totalItems"
+            :items-per-page="itemsPerPage"
             mobile-breakpoint="md"
             class="elevation-1"
+            @update:options="handleOptionsUpdate"
           >
             <template #[`item.status`]="{ item }">
               <v-chip
@@ -128,7 +131,7 @@
                 </td>
               </tr>
             </template>
-          </v-data-table>
+          </v-data-table-server>
         </v-card>
       </v-col>
     </v-row>
@@ -165,6 +168,9 @@ const headers: TableHeader[] = [
 
 const orders = ref<OrderSummary[]>([])
 const loading = ref<boolean>(false)
+const currentPage = ref<number>(1)
+const itemsPerPage = ref<number>(10)
+const totalItems = ref<number>(0)
 
 const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString('es-AR', {
@@ -186,12 +192,13 @@ const getStatusColor = (status: string): string => {
 const loadOrders = async (): Promise<void> => {
   loading.value = true
   try {
-    const { data, error } = await getOrders()
+    const { data, error } = await getOrders(currentPage.value, itemsPerPage.value)
     if (error) {
       console.error('Error al cargar órdenes:', error)
       alertStore.showAlert('Error al cargar órdenes. Vuelve a cargar la página', 'error')
     } else if (data) {
       orders.value = data.data
+      totalItems.value = data.meta.total
     }
   } catch (error) {
     console.error('Error al cargar órdenes:', error)
@@ -199,6 +206,12 @@ const loadOrders = async (): Promise<void> => {
   } finally {
     loading.value = false
   }
+}
+
+const handleOptionsUpdate = (options: { page: number; itemsPerPage: number }): void => {
+  currentPage.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  loadOrders()
 }
 
 const viewOrder = (order: OrderSummary): void => {
