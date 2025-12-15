@@ -28,6 +28,7 @@
             :headers="headers"
             :items="products"
             :loading="loading"
+            mobile-breakpoint="md"
             class="elevation-1"
           >
             <template #[`item.active`]="{ item }">
@@ -52,6 +53,87 @@
                 color="error"
                 @click="showDeleteModal(item)"
               />
+            </template>
+
+            <!-- Vista móvil personalizada -->
+            <template #item="{ item }">
+              <tr v-if="$vuetify.display.mdAndUp">
+                <td>{{ item.title }}</td>
+                <td>{{ item.price }}</td>
+                <td>{{ item.stock }}</td>
+                <td>
+                  <v-chip
+                    :color="item.active ? 'success' : 'error'"
+                    size="small"
+                  >
+                    {{ item.active ? 'Publicado' : 'No publicado' }}
+                  </v-chip>
+                </td>
+                <td>
+                  <v-btn
+                    icon="mdi-pencil"
+                    variant="text"
+                    color="primary"
+                    @click="editProduct(item)"
+                  />
+                  <v-btn
+                    icon="mdi-delete"
+                    variant="text"
+                    color="error"
+                    @click="showDeleteModal(item)"
+                  />
+                </td>
+              </tr>
+              <tr v-else>
+                <td colspan="100%">
+                  <v-card variant="outlined" class="my-2">
+                    <v-card-text>
+                      <div class="mb-3">
+                        <span class="text-body-1 font-weight-bold">{{ item.title }}</span>
+                      </div>
+                      <v-divider class="my-2" />
+                      <div class="d-flex justify-space-between mb-1">
+                        <span class="text-body-2 text-grey-darken-1">Precio:</span>
+                        <span class="text-body-2 font-weight-medium">${{ item.price }}</span>
+                      </div>
+                      <div class="d-flex justify-space-between mb-1">
+                        <span class="text-body-2 text-grey-darken-1">Stock:</span>
+                        <span class="text-body-2 font-weight-medium">{{ item.stock }}</span>
+                      </div>
+                      <div class="d-flex justify-space-between mb-1">
+                        <span class="text-body-2 text-grey-darken-1">Estado:</span>
+                        <v-chip
+                          :color="item.active ? 'success' : 'error'"
+                          size="small"
+                        >
+                          {{ item.active ? 'Publicado' : 'No publicado' }}
+                        </v-chip>
+                      </div>
+                      <v-divider class="my-2" />
+                      <div class="d-flex flex-column ga-2">
+                        <v-btn
+                          variant="outlined"
+                          size="small"
+                          prepend-icon="mdi-pencil"
+                          color="primary"
+                          @click="editProduct(item)"
+                        >
+                          Editar
+                        </v-btn>
+                        <v-btn
+                          variant="outlined"
+                          size="small"
+                          prepend-icon="mdi-delete"
+                          color="error"
+                          @click="showDeleteModal(item)"
+                        >
+                          Eliminar
+                        </v-btn>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </td>
+              </tr>
             </template>
           </v-data-table>
         </v-card>
