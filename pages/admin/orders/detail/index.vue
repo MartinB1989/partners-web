@@ -1,7 +1,7 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
+  <v-container class="px=0">
+    <v-row class="px-0">
+      <v-col cols="12" class="px-0">
         <div class="d-flex justify-space-between align-center mb-4">
           <h1 class="text-h4">Detalle de Orden</h1>
           <v-btn
@@ -182,39 +182,78 @@
             <v-card-title>Productos</v-card-title>
             <v-divider />
             <v-card-text>
-              <v-row v-if="order.items && order.items.length > 0">
-                <v-col cols="12">
-                  <v-table dense>
-                    <thead>
-                      <tr>
-                        <th class="text-left">Imagen</th>
-                        <th class="text-left">Producto</th>
-                        <th class="text-right">Cantidad</th>
-                        <th class="text-right">Precio Unitario</th>
-                        <th class="text-right">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="item in order.items" :key="item.id">
-                        <td>
-                          <v-img
-                            v-if="item.imageUrl"
-                            :src="item.imageUrl"
-                            alt="Producto"
-                            max-width="60"
-                            class="rounded"
-                          />
-                          <span v-else class="text-caption text-grey">Sin imagen</span>
-                        </td>
-                        <td>{{ item.title }}</td>
-                        <td class="text-right">{{ item.quantity }}</td>
-                        <td class="text-right">{{ formatToCurrency(item.unitPrice) }}</td>
-                        <td class="text-right">{{ formatToCurrency(item.subTotal) }}</td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-                </v-col>
-              </v-row>
+              <div v-if="order.items && order.items.length > 0">
+                <!-- Vista Desktop -->
+                <v-table v-if="$vuetify.display.mdAndUp" dense>
+                  <thead>
+                    <tr>
+                      <th class="text-left">Imagen</th>
+                      <th class="text-left">Producto</th>
+                      <th class="text-right">Cantidad</th>
+                      <th class="text-right">Precio Unitario</th>
+                      <th class="text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in order.items" :key="item.id">
+                      <td>
+                        <v-img
+                          v-if="item.imageUrl"
+                          :src="item.imageUrl"
+                          alt="Producto"
+                          max-width="60"
+                          class="rounded"
+                        />
+                        <span v-else class="text-caption text-grey">Sin imagen</span>
+                      </td>
+                      <td>{{ item.title }}</td>
+                      <td class="text-right">{{ item.quantity }}</td>
+                      <td class="text-right">{{ formatToCurrency(item.unitPrice) }}</td>
+                      <td class="text-right">{{ formatToCurrency(item.subTotal) }}</td>
+                    </tr>
+                  </tbody>
+                </v-table>
+
+                <!-- Vista Mobile -->
+                <div v-else>
+                  <v-card
+                    v-for="item in order.items"
+                    :key="item.id"
+                    variant="outlined"
+                    class="mb-3"
+                  >
+                    <v-card-text>
+                      <div class="d-flex flex-column align-center mb-3">
+                        <v-img
+                          v-if="item.imageUrl"
+                          :src="item.imageUrl"
+                          alt="Producto"
+                          width="120"
+                          height="120"
+                          cover
+                          class="rounded mb-2"
+                        />
+                        <span v-else class="text-caption text-grey mb-2">Sin imagen</span>
+                        <span class="text-body-1 font-weight-bold text-center">{{ item.title }}</span>
+                      </div>
+                      <v-divider class="my-2" />
+                      <div class="d-flex justify-space-between mb-1">
+                        <span class="text-body-2 text-grey-darken-1">Cantidad:</span>
+                        <span class="text-body-2 font-weight-medium">{{ item.quantity }}</span>
+                      </div>
+                      <div class="d-flex justify-space-between mb-1">
+                        <span class="text-body-2 text-grey-darken-1">Precio Unitario:</span>
+                        <span class="text-body-2 font-weight-medium">{{ formatToCurrency(item.unitPrice) }}</span>
+                      </div>
+                      <v-divider class="my-2" />
+                      <div class="d-flex justify-space-between">
+                        <span class="text-body-2 font-weight-bold">Subtotal:</span>
+                        <span class="text-body-2 font-weight-bold text-primary">{{ formatToCurrency(item.subTotal) }}</span>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </div>
+              </div>
               <p v-else class="text-center text-grey">No hay productos en esta orden</p>
             </v-card-text>
           </v-card>

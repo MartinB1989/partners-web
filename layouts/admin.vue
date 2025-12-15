@@ -70,7 +70,7 @@
 
     <!-- Contenido principal -->
     <v-main>
-      <v-container fluid class="py-8 px-6">
+      <v-container fluid class="py-8 px-2">
         <slot />
       </v-container>
     </v-main>

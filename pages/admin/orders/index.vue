@@ -1,7 +1,7 @@
 <template>
   <v-container class="px-0">
     <v-row class="px-0">
-      <v-col cols="12" class="px-0">
+      <v-col cols="12">
         <div class="d-flex justify-space-between align-center mb-4">
           <h1 class="text-h4">Órdenes</h1>
           <v-btn
