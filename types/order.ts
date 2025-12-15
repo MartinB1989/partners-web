@@ -55,7 +55,7 @@ export interface Order {
   deliveryType: DeliveryType
   sessionId?: string
   notes?: string
-  orderNumber: string
+  orderNumber?: string
   items: OrderItem[]
   payment?: PaymentInfo
   createdAt?: Date
