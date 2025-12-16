@@ -32,17 +32,19 @@
                 @click:append-inner="showPassword = !showPassword"
               />
               
-              <v-btn 
-                color="primary" 
-                block 
-                size="large" 
+              <v-btn
+                color="primary"
+                block
+                size="large"
                 type="submit"
                 :loading="isLoading"
-                :disabled="!isFormValid"
+                :disabled="!isFormValid || isBlocked"
               >
                 Ingresar
               </v-btn>
-              
+
+              <AdminLoginRateLimitAlert ref="rateLimitAlert" />
+
               <div class="text-center mt-4">
                 <v-btn variant="text" color="primary" class="text-none">
                   ¿Olvidaste tu contraseña?
@@ -76,10 +78,12 @@
 <script setup lang="ts">
 import { useAlertStore } from '~/stores/alert'
 import { useAuthStore } from '~/stores/auth'
+import { useLoginRateLimitStore } from '~/stores/loginRateLimit'
 import { useAuth } from '~/composables/services/useAuth'
 
 // Redirigir si ya está autenticado
 const authStore = useAuthStore()
+const loginRateLimitStore = useLoginRateLimitStore()
 const router = useRouter()
 const { adminLogin } = useAuth()
 
@@ -102,6 +106,11 @@ const password = ref('')
 const showPassword = ref(false)
 const isLoading = ref(false)
 
+// Referencia al componente de rate limit
+const rateLimitAlert = ref<{ startCountdown: () => void } | null>(null)
+
+const isBlocked = computed(() => loginRateLimitStore.isBlocked)
+
 const rules = {
   required: (v: string) => !!v || 'Este campo es obligatorio',
   email: (v: string) => /.+@.+\..+/.test(v) || 'Introduce un correo electrónico válido'
@@ -117,6 +126,10 @@ const handleLogin = async () => {
     const {data, error} = await adminLogin(email.value, password.value)
     if (error) {
       alertStore.showAlert(error, 'error')
+      // Si el usuario fue bloqueado, iniciar el countdown
+      if (loginRateLimitStore.isBlocked && rateLimitAlert.value) {
+        rateLimitAlert.value.startCountdown()
+      }
     } else if (data) {
         authStore.setToken(data.token)
         authStore.setUser(data.user)

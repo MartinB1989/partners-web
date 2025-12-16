@@ -1,11 +1,13 @@
 import { useRuntimeConfig } from '#app'
 import type { ApiError, ApiResponse, RequestResult } from '~/types/api-response'
 import { useAuthStore } from '~/stores/auth'
+import { useLoginRateLimitStore } from '~/stores/loginRateLimit'
 
 export const useApi = () => {
   const config = useRuntimeConfig()
   const baseURL = config.public.apiBase
   const authStore = useAuthStore()
+  const loginRateLimitStore = useLoginRateLimitStore()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const request = async <T, B extends BodyInit | Record<string, any> | null = any>(
@@ -43,6 +45,10 @@ export const useApi = () => {
           error.response && typeof error.response === 'object' &&
           '_data' in error.response) {
         const apiError = error.response._data as ApiError
+        if(apiError.statusCode == 429 && apiError.path === '/api/auth/admin/login' ) {
+          const expiraLimitAt = apiError.timestamp
+          loginRateLimitStore.setBlockedUntil(expiraLimitAt)
+        }
         return { data: null, error: apiError.message }
       }
 
