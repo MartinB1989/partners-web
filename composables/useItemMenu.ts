@@ -36,13 +36,13 @@ export function useItemMenu() {
       title: 'Puntos de retiro', 
       icon: 'mdi-map-marker-outline', 
       to: '/admin/pickup-point',
-      roles: adminOnly
+      roles: adminAndProductor
     },
     {
       title: 'Ordenes', 
       icon: 'mdi-sale', 
       to: '/admin/orders',
-      roles: adminOnly
+      roles: adminAndProductor
     }
   ])
   
