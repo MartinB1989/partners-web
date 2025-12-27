@@ -4,13 +4,19 @@ export interface User {
   email: string;
   roles: string[];
 }
-
+export interface Tokens {
+  accessToken: string
+  refreshToken: string
+  expiresIn: number
+}
 export interface AuthState {
-  token: string | null;
+  accessToken: string | null
+  refreshToken: string | null
+  expiresIn: number | null
   user: User | null;
 }
 export interface LoginResponse {
-  token: string;
+  tokens: Tokens;
   user: User;
 }
 

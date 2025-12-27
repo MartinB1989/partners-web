@@ -3,23 +3,28 @@ import type { AuthState, User } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
-    token: null,
+    accessToken: null,
+    refreshToken: null,
+    expiresIn: null,
     user: null
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
+    isAuthenticated: (state) => !!state.accessToken,
   },
 
   actions: {
     setToken(token: string) {
-      this.token = token
+      this.accessToken = token
+    },
+    setRefreshToken(refresh: string) {
+      this.refreshToken = refresh
     },
     setUser(user: User) {
       this.user = user
     },
     logout() {
-      this.token = null
+      this.accessToken = null
       this.user = null
     }
   },
