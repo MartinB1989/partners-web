@@ -131,7 +131,8 @@ const handleLogin = async () => {
         rateLimitAlert.value.startCountdown()
       }
     } else if (data) {
-        authStore.setToken(data.tokens.accessToken)
+        // Guardar ambos tokens (access y refresh)
+        authStore.setTokens(data.tokens)
         authStore.setUser(data.user)
         alertStore.showAlert('Inicio de sesión exitoso', 'success')
         router.push('/admin/panel')

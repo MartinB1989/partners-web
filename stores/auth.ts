@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { AuthState, User } from '~/types/auth'
+import type { AuthState, User, TokenResponse } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
@@ -11,21 +11,30 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.accessToken,
+    hasRefreshToken: (state) => !!state.refreshToken,
   },
 
   actions: {
-    setToken(token: string) {
-      this.accessToken = token
-    },
-    setRefreshToken(refresh: string) {
-      this.refreshToken = refresh
+    setTokens(tokens: TokenResponse) {
+      this.accessToken = tokens.accessToken
+      this.refreshToken = tokens.refreshToken
+      this.expiresIn = tokens.expiresIn
     },
     setUser(user: User) {
       this.user = user
     },
-    logout() {
+    updateAccessToken(accessToken: string) {
+      this.accessToken = accessToken
+    },
+    clearAuth() {
       this.accessToken = null
+      this.refreshToken = null
+      this.expiresIn = null
       this.user = null
+    },
+    // Alias para mantener compatibilidad
+    logout() {
+      this.clearAuth()
     }
   },
 

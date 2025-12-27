@@ -4,10 +4,11 @@ export interface User {
   email: string;
   roles: string[];
 }
-export interface Tokens {
+export interface TokenResponse {
   accessToken: string
   refreshToken: string
   expiresIn: number
+  tokenType: 'Bearer'
 }
 export interface AuthState {
   accessToken: string | null
@@ -16,7 +17,7 @@ export interface AuthState {
   user: User | null;
 }
 export interface LoginResponse {
-  tokens: Tokens;
+  tokens: TokenResponse;
   user: User;
 }
 
