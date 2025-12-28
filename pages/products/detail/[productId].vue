@@ -88,6 +88,7 @@
 import { computed, watch, defineAsyncComponent } from 'vue'
 import type { ProductImage } from '~/types/product'
 import { useProducts } from '~/composables/services/useProducts'
+import AppProductInfo from '~/components/app/AppProductInfo.vue'
 
 // ✅ Lazy load componentes pesados (code splitting)
 const AppProductGallery = defineAsyncComponent(() =>
@@ -99,7 +100,6 @@ const AppProductTabs = defineAsyncComponent(() =>
 )
 
 // Importar componente crítico normalmente
-import AppProductInfo from '~/components/app/AppProductInfo.vue'
 
 // Composables
 const route = useRoute()

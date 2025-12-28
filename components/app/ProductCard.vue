@@ -11,7 +11,7 @@
         fit="contain"
         class="product-image"
       />
-      <div class="image-gradient"></div>
+      <div class="image-gradient"/>
       <v-card-title v-if="!hasImage" class="text-white image-title">
         {{ truncateText(product.title, 35) }}
       </v-card-title>
@@ -67,7 +67,7 @@ const mainImage = computed(() => {
   }
   
   const main = props.product.images.find(img => img.main);
-  return main ? main.url : props.product.images[0].url;
+  return main ? main.url : props.product.images[0]?.url || '';
 });
 
 const hasImage = computed(() => {
