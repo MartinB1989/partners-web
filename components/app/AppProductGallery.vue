@@ -5,12 +5,18 @@
         v-for="(image, i) in images"
         :key="i"
       >
-        <v-img
-          :src="image.url"
-          height="400"
-          class="rounded-lg"
-          contain
-        />
+        <div class="gallery-image-wrapper">
+          <NuxtImg
+            :src="image.url"
+            width="600"
+            height="400"
+            format="webp"
+            :loading="i === 0 ? 'eager' : 'lazy'"
+            :alt="`${productTitle || 'Producto'} - Imagen ${i + 1}`"
+            fit="contain"
+            class="rounded-lg gallery-main-image"
+          />
+        </div>
       </v-window-item>
     </v-window>
 
@@ -22,11 +28,14 @@
         :class="['thumbnail-card', currentImage === i ? 'border border-primary' : '']"
         @click="currentImage = i"
       >
-        <v-img
+        <NuxtImg
           :src="image.url"
-          height="70"
           width="70"
-          contain
+          height="70"
+          format="webp"
+          loading="lazy"
+          :alt="`${productTitle || 'Producto'} - Miniatura ${i + 1}`"
+          fit="cover"
           class="rounded"
         />
       </v-card>
@@ -40,6 +49,7 @@ import type { ProductImage } from '~/types/product';
 
 interface Props {
   images: ProductImage[];
+  productTitle?: string;
 }
 
 defineProps<Props>();
@@ -47,6 +57,19 @@ const currentImage = ref(0);
 </script>
 
 <style scoped>
+.gallery-image-wrapper {
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-main-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
 .thumbnails-container {
   display: flex;
   overflow-x: auto;

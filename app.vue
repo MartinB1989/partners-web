@@ -34,6 +34,30 @@
 import { useAlertStore } from '~/stores/alert'
 const alertStore = useAlertStore()
 
+// ✅ Configuración SEO global
+const config = useRuntimeConfig()
+
+useHead({
+  titleTemplate: (title) => title ? `${title} - Partners` : 'Partners - Tu Marketplace de Confianza',
+  htmlAttrs: {
+    lang: 'es-AR'
+  },
+  link: [
+    { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+    { rel: 'canonical', href: config.public.siteUrl }
+  ],
+  meta: [
+    { charset: 'utf-8' },
+    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+  ]
+})
+
+useSeoMeta({
+  ogSiteName: 'Partners',
+  ogType: 'website',
+  twitterCard: 'summary_large_image'
+})
+
 const getAlertIcon = (type: 'success' | 'error' | 'warning' | 'info') => {
   switch (type) {
     case 'success': return 'mdi-check-circle';

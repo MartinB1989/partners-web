@@ -1,17 +1,22 @@
 <template>
   <v-card class="product-card" elevation="2" :to="`/products/detail/${product.id}`" height="380">
-    <v-img
-      :src="mainImage"
-      height="200"
-      contain
-      class="align-end"
-      gradient="to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6)"
-    >
-      <v-card-title v-if="!hasImage" class="text-white">
+    <div class="product-image-wrapper">
+      <NuxtImg
+        :src="mainImage"
+        width="300"
+        height="200"
+        format="webp"
+        loading="lazy"
+        :alt="product.title"
+        fit="contain"
+        class="product-image"
+      />
+      <div class="image-gradient"></div>
+      <v-card-title v-if="!hasImage" class="text-white image-title">
         {{ truncateText(product.title, 35) }}
       </v-card-title>
-    </v-img>
-    
+    </div>
+
     <v-card-text class="d-flex flex-column justify-space-between" style="height: 180px;">
       <div>
         <div v-if="hasImage" class="text-subtitle-1 font-weight-medium mb-1 title-truncate">
@@ -87,6 +92,35 @@ function truncateText(text: string, maxLength: number): string {
 .product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.product-image-wrapper {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6));
+  pointer-events: none;
+}
+
+.image-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .title-truncate {

@@ -20,6 +20,17 @@ export default defineNuxtConfig({
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     }
   },
+
+  // ✅ Configuración de @nuxt/image para optimización
+  image: {
+    domains: ['partners-develop-216021.s3.us-east-1.amazonaws.com'],
+    alias: {
+      s3: 'https://partners-develop-216021.s3.us-east-1.amazonaws.com'
+    },
+    format: ['webp', 'jpg'],
+    quality: 80
+  },
+
   build: {
     transpile: ['vuetify'],
   },
@@ -60,11 +71,47 @@ export default defineNuxtConfig({
     '/checkout/**': { ssr: false }
   },
 
-  // ✅ Configurar prerender para home y sitemap
+  // ✅ Configuración optimizada de Nitro (prerender + caché)
   nitro: {
     prerender: {
-      routes: ['/'],
-      crawlLinks: false
+      crawlLinks: true,
+      routes: [
+        '/',
+        '/products',
+        '/sitemap.xml'
+      ],
+      ignore: [
+        '/admin',
+        '/admin/**',
+        '/cart',
+        '/checkout/**'
+      ]
+    },
+
+    // Compresión de assets para mejor performance
+    compressPublicAssets: true,
+
+    // Headers de caché optimizados
+    routeRules: {
+      // Assets estáticos: caché inmutable
+      '/_nuxt/**': {
+        headers: {
+          'cache-control': 'public, max-age=31536000, immutable'
+        }
+      },
+      // Páginas públicas: SWR (Stale-While-Revalidate)
+      '/products': {
+        swr: 3600,  // 1 hora
+        headers: {
+          'cache-control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+        }
+      },
+      '/products/**': {
+        swr: 1800,  // 30 min
+        headers: {
+          'cache-control': 'public, max-age=1800, s-maxage=1800, stale-while-revalidate=86400'
+        }
+      }
     }
   },
 

@@ -28,12 +28,19 @@
           </v-btn>
         </v-col>
 
-        <!-- Galería de imágenes -->
+        <!-- Galería de imágenes (lazy loaded) -->
         <v-col cols="12" md="6" lg="5">
-          <AppProductGallery :images="productImages" />
+          <Suspense>
+            <template #default>
+              <AppProductGallery :images="productImages" :product-title="product.title" />
+            </template>
+            <template #fallback>
+              <v-skeleton-loader type="image" height="400" />
+            </template>
+          </Suspense>
         </v-col>
 
-        <!-- Información del producto -->
+        <!-- Información del producto (carga inmediata - crítico) -->
         <v-col cols="12" md="6" lg="7">
           <AppProductInfo
             :title="product.title"
@@ -42,13 +49,20 @@
             :product-id="Number(route.params.productId)"
           />
         </v-col>
-        
-        <!-- Sección de pestañas con la descripción y otras informaciones -->
+
+        <!-- Sección de pestañas con la descripción (lazy loaded) -->
         <v-col cols="12" class="mt-8 border border-1 border-opacity-50 rounded-lg">
-          <AppProductTabs 
-            :description="product.description"
-            :tabs="[{ label: 'Descripción', value: 'description' }]"
-          />
+          <Suspense>
+            <template #default>
+              <AppProductTabs
+                :description="product.description"
+                :tabs="[{ label: 'Descripción', value: 'description' }]"
+              />
+            </template>
+            <template #fallback>
+              <v-skeleton-loader type="article" />
+            </template>
+          </Suspense>
         </v-col>
       </v-row>
 
@@ -71,18 +85,26 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, watch } from 'vue'
+import { computed, watch, defineAsyncComponent } from 'vue'
 import type { ProductImage } from '~/types/product'
 import { useProducts } from '~/composables/services/useProducts'
 
-// Importar los componentes
-import AppProductGallery from '~/components/app/AppProductGallery.vue'
+// ✅ Lazy load componentes pesados (code splitting)
+const AppProductGallery = defineAsyncComponent(() =>
+  import('~/components/app/AppProductGallery.vue')
+)
+
+const AppProductTabs = defineAsyncComponent(() =>
+  import('~/components/app/AppProductTabs.vue')
+)
+
+// Importar componente crítico normalmente
 import AppProductInfo from '~/components/app/AppProductInfo.vue'
-import AppProductTabs from '~/components/app/AppProductTabs.vue'
 
 // Composables
 const route = useRoute()
 const productsService = useProducts()
+const config = useRuntimeConfig()
 
 // ✅ SSR: Cargar datos del producto con useAsyncData
 const { data: product, error, refresh } = await useAsyncData(
@@ -132,18 +154,26 @@ const productImages = computed<ProductImage[]>(() => {
   return [...product.value.images].sort((a, b) => a.order - b.order)
 })
 
-// ✅ SEO: Meta tags dinámicos basados en producto
+// ✅ SEO: Meta tags dinámicos mejorados basados en producto
 useHead(() => ({
-  title: product.value
-    ? `${product.value.title}`
-    : 'Producto',
+  title: product.value ? `${product.value.title}` : 'Producto',
   meta: [
     {
       name: 'description',
-      content: product.value?.description || 'Producto de Partners'
+      content: product.value?.description?.substring(0, 160) || 'Producto de Partners'
+    },
+    {
+      name: 'keywords',
+      content: product.value ? `${product.value.title}, comprar online, Partners` : 'productos, comprar online'
     }
   ],
-  // ✅ JSON-LD Structured Data para Google Shopping
+  link: [
+    {
+      rel: 'canonical',
+      href: `${config.public.siteUrl}/products/detail/${product.value?.id || route.params.productId}`
+    }
+  ],
+  // ✅ JSON-LD Structured Data mejorado para Google Shopping
   script: product.value ? [
     {
       type: 'application/ld+json',
@@ -153,27 +183,38 @@ useHead(() => ({
         name: product.value.title,
         description: product.value.description,
         image: productImages.value.map(img => img.url),
-        sku: product.value.sku,
+        sku: product.value.sku || product.value.id,
+        brand: {
+          '@type': 'Brand',
+          name: 'Partners'
+        },
         offers: {
           '@type': 'Offer',
+          url: `${config.public.siteUrl}/products/detail/${product.value.id}`,
           price: product.value.price,
           priceCurrency: 'ARS',
           availability: product.value.stock > 0
             ? 'https://schema.org/InStock'
-            : 'https://schema.org/OutOfStock'
+            : 'https://schema.org/OutOfStock',
+          seller: {
+            '@type': 'Organization',
+            name: 'Partners'
+          }
         }
       })
     }
   ] : []
 }))
 
-// Open Graph meta tags
+// ✅ Open Graph meta tags mejorados
 watch(product, (newProduct) => {
   if (newProduct) {
     useSeoMeta({
       ogTitle: newProduct.title,
-      ogDescription: newProduct.description,
-      ogImage: productImages.value[0]?.url,
+      ogDescription: newProduct.description?.substring(0, 200) || '',
+      ogImage: productImages.value[0]?.url || '',
+      ogUrl: `${config.public.siteUrl}/products/detail/${newProduct.id}`,
+      ogType: 'website',
       twitterCard: 'summary_large_image'
     })
   }
