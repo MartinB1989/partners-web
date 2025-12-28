@@ -12,7 +12,7 @@
           multiple
           prepend-icon="mdi-camera"
           variant="outlined"
-          @update:model-value="addImages"
+          @update:model-value="(files) => addImages(files as FileList | File[] | null)"
         />
         
         <p v-if="images && images.length > 0" class="mt-4 mb-2">Vista previa:</p>
@@ -26,8 +26,8 @@
             md="4"
             lg="3"
           >
-            <v-card 
-              class="mx-auto" 
+            <v-card
+              class="mx-auto"
               height="200"
               :class="{ 'main-image-card': mainImageIndex === index }"
             >
@@ -37,6 +37,19 @@
                   class="object-cover max-width-100 max-height-100"
                   alt="Vista previa"
                 >
+
+                <!-- Indicador de compresión en progreso -->
+                <v-progress-circular
+                  v-if="compressionProgress[index] !== undefined && compressionProgress[index] < 100"
+                  :model-value="compressionProgress[index]"
+                  color="primary"
+                  size="60"
+                  width="5"
+                  class="position-absolute compression-progress"
+                >
+                  {{ compressionProgress[index] }}%
+                </v-progress-circular>
+
                 <v-btn
                   icon
                   size="small"
@@ -47,7 +60,7 @@
                 >
                   <v-icon>mdi-close</v-icon>
                 </v-btn>
-                
+
                 <v-btn
                   icon
                   size="small"
@@ -59,7 +72,7 @@
                 >
                   <v-icon>mdi-star</v-icon>
                 </v-btn>
-                
+
                 <v-chip
                   v-if="mainImageIndex === index"
                   color="amber-darken-2"
@@ -69,9 +82,23 @@
                 >
                   Principal
                 </v-chip>
+
+                <!-- Badge de compresión exitosa -->
+                <v-chip
+                  v-if="compressionInfo[index] && compressionInfo[index].ratio !== '0%'"
+                  color="success"
+                  size="x-small"
+                  class="position-absolute compression-badge"
+                  style="bottom: 5px; right: 5px;"
+                >
+                  <v-icon size="x-small" start>mdi-check-circle</v-icon>
+                  {{ formatFileSize(compressionInfo[index].originalSize) }} →
+                  {{ formatFileSize(compressionInfo[index].compressedSize) }}
+                  ({{ compressionInfo[index].ratio }})
+                </v-chip>
               </div>
               <v-card-text class="text-caption text-truncate">
-                {{ images[index].name }}
+                {{ images[index]?.name }}
               </v-card-text>
             </v-card>
           </v-col>
@@ -124,93 +151,154 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useImageCompression } from '~/composables/useImageCompression'
+import { useAlertStore } from '~/stores/alert'
 
-const props = defineProps({
-  productData: {
-    type: Object,
-    required: true
-  },
-  hideBackButton: {
-    type: Boolean,
-    default: false
-  },
-  hideCancelButton: {
-    type: Boolean,
-    default: false
-  },
-  submitButtonText: {
-    type: String,
-    default: 'Guardar producto'
-  },
-  allowDeselect: {
-    type: Boolean,
-    default: true
-  }
+interface Props {
+  productData: Record<string, unknown>
+  hideBackButton?: boolean
+  hideCancelButton?: boolean
+  submitButtonText?: string
+  allowDeselect?: boolean
+}
+
+interface CompressionInfo {
+  originalSize: number
+  compressedSize: number
+  ratio: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  hideBackButton: false,
+  hideCancelButton: false,
+  submitButtonText: 'Guardar producto',
+  allowDeselect: true
 })
 
-const emit = defineEmits(['save', 'back', 'cancel'])
+const emit = defineEmits<{
+  save: [images: Array<{ file: File; contentType: string; fileExtension: string; main: boolean }>]
+  back: []
+  cancel: []
+}>()
 
-const images = ref([])
-const imagePreviews = ref([])
+const images = ref<File[]>([])
+const imagePreviews = ref<Array<{ url: string; name: string }>>([])
 const loading = ref(false)
 const errorMessage = ref('')
 const mainImageIndex = ref(0) // Por defecto, la primera imagen es la principal
 
+// Nuevos estados para compresión
+const compressionProgress = ref<Record<number, number>>({})
+const compressionInfo = ref<Record<number, CompressionInfo>>({})
+
 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const maxFileSize = 5 * 1024 * 1024 // 5MB
+const compressionThreshold = 1 * 1024 * 1024 // 1MB - Solo comprimir imágenes mayores a este tamaño
 
-const validateImages = (fileList) => {
+const alertStore = useAlertStore()
+const { compressImage } = useImageCompression()
+
+/**
+ * Formatea el tamaño de archivo en bytes a formato legible
+ */
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+const validateImages = (fileList: FileList | File[] | null): string | true => {
   if (!fileList) return true
-  
-  for (const file of fileList) {
+
+  const files = Array.isArray(fileList) ? fileList : Array.from(fileList)
+
+  for (const file of files) {
     if (!allowedTypes.includes(file.type)) {
       return 'Solo se permiten archivos de imagen (JPEG, JPG, PNG, WEBP)'
     }
-    
+
     if (file.size > maxFileSize) {
       return `El tamaño máximo por archivo es 5MB. "${file.name}" excede este límite.`
     }
   }
-  
+
   return true
 }
 
-const generatePreviews = () => {
-  errorMessage.value = ''
-  
-  if (!images.value || images.value.length === 0) return
-  
-  const startIndex = imagePreviews.value.length
-  const newImages = images.value.slice(startIndex)
-  
-  for (const file of newImages) {
+/**
+ * Genera preview para un archivo individual
+ */
+const generatePreview = (file: File): Promise<void> => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    
+
     reader.onload = (e) => {
-      imagePreviews.value.push({
-        url: e.target.result,
-        name: file.name
-      })
+      if (e.target?.result) {
+        imagePreviews.value.push({
+          url: e.target.result as string,
+          name: file.name
+        })
+        resolve()
+      } else {
+        reject(new Error('Error al leer el archivo'))
+      }
     }
-    
+
+    reader.onerror = () => {
+      reject(new Error('Error al leer el archivo'))
+    }
+
     reader.readAsDataURL(file)
-  }
+  })
 }
 
-const removeImage = (index) => {
+const removeImage = (index: number) => {
   if (index >= 0 && index < images.value.length) {
     // Eliminamos el archivo
     const newImages = [...images.value]
     newImages.splice(index, 1)
     images.value = newImages
-    
+
     // Eliminamos la vista previa
     const newPreviews = [...imagePreviews.value]
     newPreviews.splice(index, 1)
     imagePreviews.value = newPreviews
-    
+
+    // Limpiar información de compresión
+    const newCompressionInfo: Record<number, CompressionInfo> = {}
+    const newCompressionProgress: Record<number, number> = {}
+
+    Object.keys(compressionInfo.value).forEach((key) => {
+      const keyIndex = parseInt(key)
+      const info = compressionInfo.value[keyIndex]
+      if (info) {
+        if (keyIndex < index) {
+          // Mantener índices anteriores
+          newCompressionInfo[keyIndex] = info
+        } else if (keyIndex > index) {
+          // Decrementar índices posteriores
+          newCompressionInfo[keyIndex - 1] = info
+        }
+      }
+    })
+
+    Object.keys(compressionProgress.value).forEach((key) => {
+      const keyIndex = parseInt(key)
+      const progress = compressionProgress.value[keyIndex]
+      if (progress !== undefined) {
+        if (keyIndex < index) {
+          newCompressionProgress[keyIndex] = progress
+        } else if (keyIndex > index) {
+          newCompressionProgress[keyIndex - 1] = progress
+        }
+      }
+    })
+
+    compressionInfo.value = newCompressionInfo
+    compressionProgress.value = newCompressionProgress
+
     // Si se eliminó la imagen principal, actualizamos el índice
     if (mainImageIndex.value === index) {
       if (newImages.length > 0) {
@@ -221,20 +309,20 @@ const removeImage = (index) => {
         mainImageIndex.value = 0
       }
     } else if (mainImageIndex.value > index) {
-      // Si se eliminó una imagen antes de la principal, 
+      // Si se eliminó una imagen antes de la principal,
       // debemos decrementar el índice principal
       mainImageIndex.value--
     }
   }
 }
 
-const getFileExtension = (filename) => {
+const getFileExtension = (filename: string): string => {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2)
 }
 
-const setMainImage = (index) => {
+const setMainImage = (index: number) => {
   if (index >= 0 && index < images.value.length) {
-    // Si allowDeselect está habilitado y ya era la imagen principal, 
+    // Si allowDeselect está habilitado y ya era la imagen principal,
     // desactivamos la selección estableciendo a -1 (ninguna imagen principal)
     if (props.allowDeselect && mainImageIndex.value === index) {
       mainImageIndex.value = -1
@@ -266,22 +354,96 @@ const submitImages = () => {
   }
 }
 
-const addImages = (newFiles) => {
+/**
+ * Agrega imágenes con compresión automática
+ */
+const addImages = async (newFiles: FileList | File[] | null) => {
   if (!newFiles || newFiles.length === 0) return
-  
+
+  errorMessage.value = ''
   const currentFiles = images.value || []
   const wasEmpty = currentFiles.length === 0
-  
-  // Convertimos a array y concatenamos con los archivos existentes
-  const filesToAdd = Array.from(newFiles)
-  images.value = [...currentFiles, ...filesToAdd]
-  
+
+  // Convertir a array
+  const filesToAdd = Array.isArray(newFiles) ? newFiles : Array.from(newFiles)
+
+  // Procesar cada archivo con compresión automática
+  for (let i = 0; i < filesToAdd.length; i++) {
+    const file = filesToAdd[i]
+    if (!file) continue
+
+    const index = currentFiles.length + i
+
+    // Inicializar progreso de compresión
+    compressionProgress.value[index] = 0
+
+    try {
+      // Verificar si la imagen necesita compresión
+      if (file.size > compressionThreshold) {
+        // Imagen grande: comprimir automáticamente
+        // Simular progreso de compresión
+        compressionProgress.value[index] = 50
+
+        // Comprimir imagen automáticamente (objetivo: 500 KB)
+        const result = await compressImage(file, 500)
+
+        // Actualizar progreso a 100%
+        compressionProgress.value[index] = 100
+
+        // Guardar información de compresión
+        compressionInfo.value[index] = {
+          originalSize: result.originalSize,
+          compressedSize: result.compressedSize,
+          ratio: result.compressionRatio
+        }
+
+        // Agregar archivo comprimido al array de imágenes
+        images.value.push(result.compressedFile)
+
+        // Generar preview
+        await generatePreview(result.compressedFile)
+
+        // Mostrar notificación si hubo compresión significativa
+        if (result.originalSize > result.compressedSize) {
+          const savedKB = ((result.originalSize - result.compressedSize) / 1024).toFixed(0)
+          console.log(
+            `Imagen comprimida: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (ahorro: ${savedKB} KB)`
+          )
+        }
+      } else {
+        // Imagen pequeña (< 1 MB): usar original sin comprimir
+        images.value.push(file)
+        await generatePreview(file)
+
+        console.log(
+          `Imagen agregada sin compresión: ${formatFileSize(file.size)} (por debajo del umbral de ${formatFileSize(compressionThreshold)})`
+        )
+      }
+    } catch (error) {
+      console.error('Error al comprimir imagen:', error)
+
+      // Si falla la compresión, agregar archivo original
+      images.value.push(file)
+      await generatePreview(file)
+
+      alertStore.showAlert(
+        `No se pudo comprimir "${file.name}". Se usará la imagen original.`,
+        'warning',
+        3000
+      )
+    } finally {
+      // Limpiar progreso después de un breve delay
+      setTimeout(() => {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete compressionProgress.value[index]
+      }, 1000)
+    }
+  }
+
   // Si no había imágenes previamente, la primera nueva imagen será la principal
   if (wasEmpty && filesToAdd.length > 0) {
     mainImageIndex.value = 0
   }
-  
-  generatePreviews()
 }
 
 // Limpiar URLs de vista previa cuando el componente se destruye
@@ -316,5 +478,20 @@ watch(images, (newVal) => {
 .main-image-card {
   border: 2px solid #FF8F00;
   box-shadow: 0 0 8px rgba(255, 143, 0, 0.6);
+}
+
+.compression-progress {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.compression-badge {
+  font-size: 0.65rem !important;
+  opacity: 0.95;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style> 
