@@ -60,8 +60,9 @@
                         Preparar pedido
                       </v-btn>
 
+                      <!-- Para órdenes de tipo SHIPPING -->
                       <v-btn
-                        v-if="order.status === OrderStatus.PROCESSING"
+                        v-if="order.status === OrderStatus.PROCESSING && order.deliveryType === 'SHIPPING'"
                         color="primary"
                         size="small"
                         class="mr-2 mb-2"
@@ -80,7 +81,29 @@
                         Entregado
                       </v-btn>
 
+                      <!-- Para órdenes de tipo PICKUP -->
                       <v-btn
+                        v-if="order.status === OrderStatus.PROCESSING && order.deliveryType === 'PICKUP'"
+                        color="primary"
+                        size="small"
+                        class="mr-2 mb-2"
+                        @click="openConfirmationModal(OrderStatus.READY_FOR_PICKUP)"
+                      >
+                        Listo para retirar
+                      </v-btn>
+
+                      <v-btn
+                        v-if="order.status === OrderStatus.READY_FOR_PICKUP"
+                        color="success"
+                        size="small"
+                        class="mr-2 mb-2"
+                        @click="openConfirmationModal(OrderStatus.DELIVERED)"
+                      >
+                        Entregado
+                      </v-btn>
+
+                      <v-btn
+                        v-if="order.status !== OrderStatus.DELIVERED && order.status !== OrderStatus.CANCELLED"
                         color="error"
                         size="small"
                         class="mr-2 mb-2"
