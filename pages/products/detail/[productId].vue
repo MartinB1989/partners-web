@@ -5,9 +5,9 @@
       <v-row v-if="error" justify="center" class="my-8">
         <v-col cols="12">
           <v-alert type="error" variant="tonal">
-            {{ error }}
+            {{ error.message }}
             <template #append>
-              <v-btn color="error" variant="text" @click="loadProduct">
+              <v-btn color="error" variant="text" @click="refresh">
                 Reintentar
               </v-btn>
             </template>
@@ -71,77 +71,113 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useProducts } from '~/composables/services/useProducts';
-import { useLoaderStore } from '~/stores/loader';
-import type { Product, ProductImage } from '~/types/product';
+import { computed, watch } from 'vue'
+import type { ProductImage } from '~/types/product'
+import { useProducts } from '~/composables/services/useProducts'
 
 // Importar los componentes
-import AppProductGallery from '~/components/app/AppProductGallery.vue';
-import AppProductInfo from '~/components/app/AppProductInfo.vue';
-import AppProductTabs from '~/components/app/AppProductTabs.vue';
+import AppProductGallery from '~/components/app/AppProductGallery.vue'
+import AppProductInfo from '~/components/app/AppProductInfo.vue'
+import AppProductTabs from '~/components/app/AppProductTabs.vue'
 
-const route = useRoute();
-const productsService = useProducts();
-const loaderStore = useLoaderStore();
+// Composables
+const route = useRoute()
+const productsService = useProducts()
 
-// Estado
-const product = ref<Product | null>(null);
-const error = ref<string | null>(null);
+// ✅ SSR: Cargar datos del producto con useAsyncData
+const { data: product, error, refresh } = await useAsyncData(
+  `product-${route.params.productId}`,
+  async () => {
+    const productId = route.params.productId as string
+
+    if (!productId || isNaN(Number(productId))) {
+      throw createError({
+        statusCode: 400,
+        message: 'ID de producto no válido',
+        fatal: false
+      })
+    }
+
+    const result = await productsService.getProductById(productId)
+
+    if (result.error || !result.data) {
+      throw createError({
+        statusCode: 404,
+        message: 'Producto no encontrado',
+        fatal: false
+      })
+    }
+
+    return result.data
+  },
+  {
+    server: true,
+    lazy: false
+  }
+)
 
 // Calcular imágenes del producto
 const productImages = computed<ProductImage[]>(() => {
   if (!product.value || !product.value.images || product.value.images.length === 0) {
     // Si no hay imágenes, devuelve una imagen por defecto
     return [{
-      // url: 'https://via.placeholder.com/500x500?text=Sin+imagen',
       url: 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/imagen-de-no-hay-imagen.png',
       key: 'default',
       main: true,
       order: 0
-    }];
+    }]
   }
-  
+
   // Ordenar imágenes por el campo 'order'
-  return [...product.value.images].sort((a, b) => a.order - b.order);
-});
+  return [...product.value.images].sort((a, b) => a.order - b.order)
+})
 
-// Cargar el producto
-async function loadProduct() {
-  const productId = route.params.productId as string;
-  if (!productId) {
-    error.value = 'ID de producto no válido';
-    return;
-  }
-
-  loaderStore.startLoading('Cargando producto...');
-  error.value = null;
-
-  try {
-    const { data, error: productError } = await productsService.getProductById(productId);
-
-    if (productError) {
-      error.value = productError;
-      return;
+// ✅ SEO: Meta tags dinámicos basados en producto
+useHead(() => ({
+  title: product.value
+    ? `${product.value.title}`
+    : 'Producto',
+  meta: [
+    {
+      name: 'description',
+      content: product.value?.description || 'Producto de Partners'
     }
-
-    if (data) {
-      product.value = data;
-    } else {
-      error.value = 'No se encontró el producto';
+  ],
+  // ✅ JSON-LD Structured Data para Google Shopping
+  script: product.value ? [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'Product',
+        name: product.value.title,
+        description: product.value.description,
+        image: productImages.value.map(img => img.url),
+        sku: product.value.sku,
+        offers: {
+          '@type': 'Offer',
+          price: product.value.price,
+          priceCurrency: 'ARS',
+          availability: product.value.stock > 0
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock'
+        }
+      })
     }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Error al cargar el producto';
-  } finally {
-    loaderStore.stopLoading();
-  }
-}
+  ] : []
+}))
 
-// Cargar el producto al montar el componente
-onMounted(() => {
-  loadProduct();
-});
+// Open Graph meta tags
+watch(product, (newProduct) => {
+  if (newProduct) {
+    useSeoMeta({
+      ogTitle: newProduct.title,
+      ogDescription: newProduct.description,
+      ogImage: productImages.value[0]?.url,
+      twitterCard: 'summary_large_image'
+    })
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>

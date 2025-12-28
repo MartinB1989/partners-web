@@ -11,9 +11,9 @@
       <v-row v-if="error" justify="center" class="my-8">
         <v-col cols="12">
           <v-alert type="error" variant="tonal">
-            {{ error }}
+            {{ error.message }}
             <template #append>
-              <v-btn color="error" variant="text" @click="loadProducts">
+              <v-btn color="error" variant="text" @click="refresh">
                 Reintentar
               </v-btn>
             </template>
@@ -21,8 +21,8 @@
         </v-col>
       </v-row>
 
-      <!-- Loader mientras cargan los productos -->
-      <v-row v-else-if="loading" justify="center" class="my-8">
+      <!-- Loader mientras cargan los productos (solo durante navegación) -->
+      <v-row v-else-if="status === 'pending'" justify="center" class="my-8">
         <v-col cols="12" class="text-center">
           <v-progress-circular
             indeterminate
@@ -33,22 +33,23 @@
         </v-col>
       </v-row>
 
-      <!-- Mensaje si no hay productos -->
-      <v-row v-else-if="!loading && products.length === 0" justify="center" class="my-8">
-        <v-col cols="12" class="text-center">
-          <v-icon icon="mdi-alert-circle-outline" size="64" color="grey"/>
-          <div class="text-h6 mt-4">No se encontraron productos</div>
-        </v-col>
-      </v-row>
-
       <!-- Contenido principal con productos -->
-      <template v-else>
+      <template v-else-if="data">
+        <!-- Mensaje si no hay productos -->
+        <v-row v-if="data.data.length === 0" justify="center" class="my-8">
+          <v-col cols="12" class="text-center">
+            <v-icon icon="mdi-alert-circle-outline" size="64" color="grey"/>
+            <div class="text-h6 mt-4">No se encontraron productos</div>
+          </v-col>
+        </v-row>
+
+        <!-- Lista de productos -->
         <v-data-iterator
-          :items="products"
+          v-else
+          :items="data.data"
           :items-per-page="itemsPerPage"
           :page="currentPage"
-          :items-length="totalItems"
-          @update:page="onPageChange"
+          :items-length="data.meta.total"
         >
           <template #default="{ items }">
             <v-row>
@@ -74,7 +75,6 @@
                 :length="totalPages"
                 :total-visible="7"
                 rounded
-                @update:model-value="onPageChange"
               />
             </div>
           </template>
@@ -85,70 +85,71 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed } from 'vue';
+import { computed } from 'vue'
+import ProductCard from '~/components/app/ProductCard.vue'
+import type { Product } from '~/types/product'
+import { useProducts } from '~/composables/services/useProducts'
 
-// Importamos los componentes y servicios
-import ProductCard from '~/components/app/ProductCard.vue';
-import { useProducts } from '~/composables/services/useProducts';
-import { useLoaderStore } from '~/stores/loader';
-import type { Product } from '~/types/product';
+// Composables
+const route = useRoute()
+const router = useRouter()
+const productsService = useProducts()
 
-// Variables de estado
-const products = ref<Product[]>([]);
-const error = ref<string | null>(null);
-const loading = ref(true);
-const currentPage = ref(1);
-const itemsPerPage = ref(12);
-const totalItems = ref(0);
+// Configuración de paginación
+const itemsPerPage = 12
 
-// Inicializamos los stores
-const productsService = useProducts();
-const loaderStore = useLoaderStore();
+// Computed para página actual desde query params
+const currentPage = computed({
+  get: () => parseInt(route.query.page as string) || 1,
+  set: (value) => router.push({ query: { page: value.toString() } })
+})
 
-// Calculamos el total de páginas
-const totalPages = computed(() => {
-  return Math.ceil(totalItems.value / itemsPerPage.value);
-});
-
-// Función para cargar productos
-async function loadProducts() {
-  loading.value = true;
-  loaderStore.startLoading('Cargando productos...');
-  error.value = null;
-
-  try {
-    const { data, error: requestError } = await productsService.getProducts(
+// ✅ SSR: Cargar datos con useAsyncData
+const { data, error, status, refresh } = await useAsyncData(
+  `products-page-${currentPage.value}`,
+  async () => {
+    const result = await productsService.getProducts(
       currentPage.value,
-      itemsPerPage.value
-    );
+      itemsPerPage
+    )
 
-    if (requestError) {
-      error.value = requestError;
-      return;
+    if (result.error) {
+      throw createError({
+        statusCode: 500,
+        message: result.error,
+        fatal: false
+      })
     }
 
-    if (data) {
-      products.value = data.data;
-      totalItems.value = data.meta.total;
-    }
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Error al cargar productos';
-  } finally {
-    loading.value = false;
-    loaderStore.stopLoading();
+    return result.data!
+  },
+  {
+    server: true,        // Ejecutar en servidor
+    lazy: false,         // Bloquear hasta tener datos
+    watch: [currentPage] // Re-fetch en cambio de página
   }
-}
+)
 
-// Función para manejar cambios de página
-async function onPageChange(page: number) {
-  currentPage.value = page;
-  await loadProducts();
-}
+// Calcular total de páginas
+const totalPages = computed(() => {
+  if (!data.value) return 0
+  return Math.ceil(data.value.meta.total / itemsPerPage)
+})
 
-// Cargamos los productos al montar el componente
-onMounted(() => {
-  loadProducts();
-});
+// ✅ SEO: Meta tags
+useHead({
+  title: 'Productos',
+  meta: [
+    { name: 'description', content: 'Descubre nuestra selección de productos frescos y de calidad' }
+  ]
+})
+
+useSeoMeta({
+  ogTitle: 'Productos - Partners',
+  ogDescription: 'Descubre nuestra selección de productos frescos y de calidad',
+  ogImage: 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/og-image.jpg',
+  ogType: 'website'
+})
 </script>
 
 <style scoped>

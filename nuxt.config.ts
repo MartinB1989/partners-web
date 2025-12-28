@@ -4,7 +4,11 @@ import type { NuxtPage } from 'nuxt/schema'
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
+
+  // ✅ Habilitar SSR selectivo
+  ssr: true,
+
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
@@ -13,7 +17,7 @@ export default defineNuxtConfig({
       zipnovaApiSecret: process.env.NUXT_PUBLIC_ZIPNOVA_API_SECRET,
       zipnovaAccountId: process.env.NUXT_ZIPNOVA_ACCOUNT_ID,
       zipnovaOriginId: process.env.NUXT_ZIPNOVA_ORIGIN_ID,
-
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     }
   },
   build: {
@@ -39,6 +43,31 @@ export default defineNuxtConfig({
       },
     },
   },
+
+  // ✅ Configurar SSR/CSR selectivo por ruta
+  routeRules: {
+    // Páginas públicas: SSR con caché
+    '/': { ssr: true },
+    '/products': { ssr: true, swr: 3600 },      // Cache 1 hora
+    '/products/**': { ssr: true, swr: 1800 },   // Cache 30 min
+
+    // Admin: CSR (client-side rendering) - sin cambios
+    '/admin': { ssr: false },
+    '/admin/**': { ssr: false },
+
+    // Cart y Checkout: CSR (estado de sesión)
+    '/cart': { ssr: false },
+    '/checkout/**': { ssr: false }
+  },
+
+  // ✅ Configurar prerender para home y sitemap
+  nitro: {
+    prerender: {
+      routes: ['/'],
+      crawlLinks: false
+    }
+  },
+
   hooks: {
     'pages:extend' (pages) {
       function setMiddleware (pages: NuxtPage[]) {
