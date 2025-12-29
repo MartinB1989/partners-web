@@ -104,10 +104,9 @@ const currentPage = computed({
   set: (value) => router.push({ query: { page: value.toString() } })
 })
 
-// ✅ SSR: Cargar datos con useAsyncData (sin cache para datos dinámicos)
+// ✅ SSR: Cargar datos con useAsyncData (sin cache)
 const { data, error, status, refresh } = await useAsyncData(
-  // Usar timestamp para hacer la key única en cada carga
-  () => `products-page-${currentPage.value}-${Date.now()}`,
+  `products-page-${currentPage.value}`,
   async () => {
     const result = await productsService.getProducts(
       currentPage.value,

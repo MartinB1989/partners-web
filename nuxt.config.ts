@@ -57,10 +57,16 @@ export default defineNuxtConfig({
 
   // ✅ Configurar SSR/CSR selectivo por ruta
   routeRules: {
-    // Páginas públicas: SSR con caché
+    // Páginas públicas: SSR con caché (solo en producción)
     '/': { ssr: true },
-    '/products': { ssr: true, swr: 3600 },      // Cache 1 hora
-    '/products/**': { ssr: true, swr: 1800 },   // Cache 30 min
+    '/products': {
+      ssr: true,
+      ...(process.env.NODE_ENV === 'production' && { swr: 3600 }) // Cache 1 hora solo en producción
+    },
+    '/products/**': {
+      ssr: true,
+      ...(process.env.NODE_ENV === 'production' && { swr: 1800 }) // Cache 30 min solo en producción
+    },
 
     // Admin: CSR (client-side rendering) - sin cambios
     '/admin': { ssr: false },
@@ -99,19 +105,21 @@ export default defineNuxtConfig({
           'cache-control': 'public, max-age=31536000, immutable'
         }
       },
-      // Páginas públicas: SWR (Stale-While-Revalidate)
-      '/products': {
-        swr: 3600,  // 1 hora
-        headers: {
-          'cache-control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+      // Páginas públicas: SWR (solo en producción)
+      ...(process.env.NODE_ENV === 'production' && {
+        '/products': {
+          swr: 3600,  // 1 hora
+          headers: {
+            'cache-control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+          }
+        },
+        '/products/**': {
+          swr: 1800,  // 30 min
+          headers: {
+            'cache-control': 'public, max-age=1800, s-maxage=1800, stale-while-revalidate=86400'
+          }
         }
-      },
-      '/products/**': {
-        swr: 1800,  // 30 min
-        headers: {
-          'cache-control': 'public, max-age=1800, s-maxage=1800, stale-while-revalidate=86400'
-        }
-      }
+      })
     }
   },
 
