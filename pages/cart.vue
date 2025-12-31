@@ -9,76 +9,67 @@
     </v-card>
 
     <template v-else-if="cartStore.hasItems">
-      <div>
-        <!-- Productos en formato de cuadrícula -->
-        <v-row>
-          <v-col
-            v-for="item in cartStore.cartItems"
-            :key="item.id"
-            cols="12"
-            sm="6"
-            md="4"
-            lg="3"
-          >
+      <v-row>
+        <!-- Columna 1: Lista de productos -->
+        <v-col cols="12" md="8" lg="9">
+          <div class="cart-items-list">
             <app-cart-item-card
+              v-for="item in cartStore.cartItems"
+              :key="item.id"
               :item="item"
+              class="mb-3"
               @removed="handleItemRemoved"
               @updated="handleItemUpdated"
               @refresh-cart="(options) => refreshCart(options)"
             />
-          </v-col>
-        </v-row>
+          </div>
+        </v-col>
 
-        <!-- Resumen del carrito -->
-        <v-row>
-          <v-col cols="12" md="8" lg="9">
-            <!-- Espacio para contenido adicional si se necesita -->
-          </v-col>
-          <v-col cols="12" md="4" lg="3">
-            <v-card variant="outlined">
-              <v-card-item>
-                <v-card-title>Resumen del pedido</v-card-title>
-                
-                <div class="d-flex justify-space-between mt-2">
-                  <span>Total ({{ cartStore.totalItems }} productos)</span>
-                  <app-currency-display 
-                    v-if="cartStore.cart?.total" 
-                    :amount="cartStore.cart.total" 
-                    bold
-                  />
-                  <span v-else class="font-weight-bold">$0</span>
-                </div>
-                
-                <v-divider class="my-4"/>
-                
-                <div class="d-flex justify-space-between mt-2">
-                  <span class="text-h6">Total a pagar</span>
-                  <app-currency-display 
-                    v-if="cartStore.cart?.total" 
-                    :amount="cartStore.cart.total" 
-                    bold 
-                    color="primary"
-                    class="text-h6"
-                  />
-                  <span v-else class="text-h6 font-weight-bold">$0</span>
-                </div>
-                
-                <v-btn
+        <!-- Columna 2: Resumen del pedido -->
+        <v-col cols="12" md="4" lg="3">
+          <v-card variant="outlined" class="sticky-summary">
+            <v-card-item>
+              <v-card-title>Resumen del pedido</v-card-title>
+
+              <div class="d-flex justify-space-between mt-2">
+                <span>Total ({{ cartStore.totalItems }} productos)</span>
+                <app-currency-display
+                  v-if="cartStore.cart?.total"
+                  :amount="cartStore.cart.total"
+                  bold
+                />
+                <span v-else class="font-weight-bold">$0</span>
+              </div>
+
+              <v-divider class="my-4"/>
+
+              <div class="d-flex justify-space-between mt-2">
+                <span class="text-h6">Total a pagar</span>
+                <app-currency-display
+                  v-if="cartStore.cart?.total"
+                  :amount="cartStore.cart.total"
+                  bold
                   color="primary"
-                  variant="elevated"
-                  block
-                  size="large"
-                  class="mt-4"
-                  :loading="loading"
-                  to="/checkout"
-                >
-                  Proceder al pago
-                </v-btn>
-              </v-card-item>
-            </v-card>
-          </v-col>
-        </v-row>
-      </div>
+                  class="text-h6"
+                />
+                <span v-else class="text-h6 font-weight-bold">$0</span>
+              </div>
+
+              <v-btn
+                color="primary"
+                variant="elevated"
+                block
+                size="large"
+                class="mt-4"
+                :loading="loading"
+                to="/checkout"
+              >
+                Proceder al pago
+              </v-btn>
+            </v-card-item>
+          </v-card>
+        </v-col>
+      </v-row>
     </template>
 
     <!-- Carrito vacío -->
@@ -176,7 +167,22 @@ function handleItemUpdated(updatedItem: CartItem) {
 </script>
 
 <style scoped>
-.v-col {
-  transition: all 0.3s ease;
+.cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sticky-summary {
+  position: sticky;
+  top: 80px;
+  align-self: flex-start;
+}
+
+/* En móvil, el resumen no es sticky */
+@media (max-width: 959px) {
+  .sticky-summary {
+    position: static;
+  }
 }
 </style>

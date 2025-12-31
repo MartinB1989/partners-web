@@ -1,57 +1,71 @@
 <template>
-  <v-card class="cart-item-card" elevation="2" height="380">
-    <v-img
-      :src="productImage"
-      height="200"
-      contain
-      :class="hasImage ? 'align-end' : ''"
-      gradient="to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6)"
-    >
-      <v-card-title v-if="!hasImage" class="text-white">
-        {{ truncateText(item.product.title, 35) }}
-      </v-card-title>
-    </v-img>
-    
-    <v-card-text class="d-flex flex-column justify-space-between" style="height: 180px;">
-      <div>
-        <div v-if="hasImage" class="text-subtitle-1 font-weight-medium mb-1 title-truncate">
-          {{ truncateText(item.product.title, 35) }}
-        </div>
-        <div class="d-flex align-center mt-2">
-          <span class="text-caption text-grey me-1">Subtotal:</span>
-          <span class="font-weight-medium primary--text">
-            <app-currency-display :amount="subtotal" />
-          </span>
-        </div>
+  <v-card class="cart-item-card" elevation="2">
+    <div class="d-flex flex-column flex-sm-row">
+      <!-- Imagen del producto -->
+      <div class="cart-item-image-container align-self-center">
+        <v-img
+          :src="productImage"
+          :aspect-ratio="1"
+          cover
+          class="cart-item-image"
+        >
+          <template v-if="!hasImage">
+            <div class="d-flex align-center justify-center h-100 bg-grey-lighten-3">
+              <v-icon size="64" color="grey-lighten-1">mdi-image-off</v-icon>
+            </div>
+          </template>
+        </v-img>
       </div>
-      
-      <div class="d-flex flex-column">
-        <div class="d-flex justify-space-between align-center mb-2">
-          <div class="text-h6 primary--text font-weight-bold">
-            <app-currency-display :amount="item.product.price" />
+
+      <!-- Contenido del item -->
+      <v-card-text class="flex-grow-1 d-flex flex-column justify-space-between pa-4">
+        <div>
+          <!-- Título del producto -->
+          <div class="text-h6 font-weight-medium mb-2">
+            {{ item.product.title }}
           </div>
-          <v-chip size="small" color="primary" variant="outlined">
-            x{{ item.quantity }}
-          </v-chip>
+
+          <!-- Precio unitario y cantidad -->
+          <div class="d-flex align-center gap-2 mb-2">
+            <div class="text-body-1 font-weight-bold">
+              <app-currency-display :amount="item.product.price" />
+            </div>
+            <v-chip size="small" color="primary" variant="outlined" class="mx-2">
+              x{{ item.quantity }}
+            </v-chip>
+          </div>
+
+          <!-- Subtotal -->
+          <div class="d-flex align-center">
+            <span class="text-body-2 text-grey-darken-1 me-2">Subtotal:</span>
+            <span class="text-h6 font-weight-bold text-primary">
+              <app-currency-display :amount="subtotal" />
+            </span>
+          </div>
         </div>
-        
-        <div class="d-flex align-center justify-space-between">
-          <div>
+
+        <!-- Controles de cantidad y eliminar -->
+        <div class="d-flex align-center justify-space-between mt-4">
+          <div class="d-flex align-center">
             <v-btn
-              variant="text"
+              variant="outlined"
               density="comfortable"
               icon
+              size="small"
               color="primary"
               :disabled="loading || item.quantity <= 1"
               @click.stop="updateQuantity(item.quantity - 1)"
             >
               <v-icon>mdi-minus</v-icon>
             </v-btn>
-            
+
+            <span class="mx-3 text-body-1 font-weight-medium">{{ item.quantity }}</span>
+
             <v-btn
-              variant="text"
+              variant="outlined"
               density="comfortable"
               icon
+              size="small"
               color="primary"
               :disabled="loading || item.quantity >= item.product.stock"
               @click.stop="updateQuantity(item.quantity + 1)"
@@ -59,20 +73,19 @@
               <v-icon>mdi-plus</v-icon>
             </v-btn>
           </div>
-          
+
           <v-btn
-            variant="outlined"
-            size="small"
+            variant="text"
             color="error"
-            icon
+            prepend-icon="mdi-delete"
             :disabled="loading"
             @click.stop="remove"
           >
-            <v-icon>mdi-delete</v-icon>
+            Eliminar
           </v-btn>
         </div>
-      </div>
-    </v-card-text>
+      </v-card-text>
+    </div>
   </v-card>
 </template>
 
@@ -101,10 +114,10 @@ const subtotal = computed(() => {
 const productImage = computed(() => {
   if (props.item.product.images && props.item.product.images.length > 0) {
     const mainImage = props.item.product.images.find(img => img.main)
-    if (mainImage) {
+    if (mainImage?.url) {
       return mainImage.url
     }
-    return props.item.product.images[0].url
+    return props.item.product.images[0]?.url || 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/imagen-de-no-hay-imagen.png'
   }
   return 'https://partners-develop-216021.s3.us-east-1.amazonaws.com/imagen-de-no-hay-imagen.png'
 })
@@ -113,12 +126,12 @@ const hasImage = computed(() => {
   return props.item.product.images && props.item.product.images.length > 0
 })
 
-function truncateText(text: string, maxLength: number): string {
-  if (!text) return '';
-  return text.length > maxLength 
-    ? text.substring(0, maxLength) + '...' 
-    : text;
-}
+// function truncateText(text: string, maxLength: number): string {
+//   if (!text) return '';
+//   return text.length > maxLength
+//     ? text.substring(0, maxLength) + '...'
+//     : text;
+// }
 
 // Actualizar la cantidad del producto
 async function updateQuantity(newQuantity: number) {
@@ -171,31 +184,32 @@ async function remove() {
 
 <style scoped>
 .cart-item-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 .cart-item-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-.title-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
+.cart-item-image-container {
+  width: 180px;
+  min-width: 180px;
+  height: 180px;
+  flex-shrink: 0;
 }
 
-.description-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.cart-item-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive: en móvil la imagen ocupa todo el ancho */
+@media (max-width: 599px) {
+  .cart-item-image-container {
+    width: 100%;
+    min-width: 100%;
+    height: 200px;
+  }
 }
 </style>
