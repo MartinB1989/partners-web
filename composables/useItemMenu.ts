@@ -43,6 +43,12 @@ export function useItemMenu() {
       icon: 'mdi-sale', 
       to: '/admin/orders',
       roles: adminAndProductor
+    },
+    {
+      title: 'Mi perfil', 
+      icon: 'mdi-account', 
+      to: '/admin/user',
+      roles: adminAndProductor
     }
   ])
   
