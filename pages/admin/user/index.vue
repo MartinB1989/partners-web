@@ -25,10 +25,8 @@
                     label="Nombre"
                     variant="outlined"
                     density="comfortable"
-                    disabled
                     prepend-inner-icon="mdi-account"
-                    hint="Próximamente podrás editar tu nombre"
-                    persistent-hint
+                    :disabled="isUpdatingUser"
                   />
                 </v-col>
 
@@ -41,6 +39,28 @@
                     disabled
                     prepend-inner-icon="mdi-email"
                   />
+                </v-col>
+              </v-row>
+
+              <!-- Botón de guardar cambios -->
+              <v-row v-if="hasUserDataChanged">
+                <v-col cols="12" class="d-flex justify-end gap-2">
+                  <v-btn
+                    color="grey"
+                    variant="text"
+                    :disabled="isUpdatingUser"
+                    @click="resetUserData"
+                  >
+                    Cancelar
+                  </v-btn>
+                  <v-btn
+                    color="primary"
+                    :loading="isUpdatingUser"
+                    :disabled="isUpdatingUser || !userName.trim()"
+                    @click="handleUpdateUser"
+                  >
+                    Guardar cambios
+                  </v-btn>
                 </v-col>
               </v-row>
 
@@ -117,6 +137,10 @@ const router = useRouter()
 // Estado reactivo
 const user = computed(() => authStore.user)
 const userName = ref(user.value?.name || '')
+const originalUserData = reactive({
+  name: user.value?.name || ''
+})
+const isUpdatingUser = ref(false)
 const isUpdatingDelivery = ref(false)
 const isUpdatingPickup = ref(false)
 const sellerSettings = reactive<Partial<SellerSettings>>({
@@ -124,11 +148,70 @@ const sellerSettings = reactive<Partial<SellerSettings>>({
   acceptsPickup: false
 })
 
+// Computed para verificar si los datos del usuario cambiaron
+const hasUserDataChanged = computed(() => {
+  return userName.value.trim() !== originalUserData.name.trim()
+})
+
 // Computed para verificar si el usuario es vendedor (ADMIN o PRODUCTOR)
 const isVendor = computed(() => {
   const roles = user.value?.roles || []
   return roles.includes('ADMIN') || roles.includes('PRODUCTOR')
 })
+
+// Resetear los datos del usuario a los valores originales
+const resetUserData = () => {
+  userName.value = originalUserData.name
+}
+
+// Manejar actualización de los datos del usuario
+const handleUpdateUser = async () => {
+  const userId = authStore.getUserId
+
+  if (!userId) {
+    alertStore.showAlert('Usuario no autenticado', 'error')
+    return
+  }
+
+  const newName = userName.value.trim()
+
+  if (!newName) {
+    alertStore.showAlert('El nombre no puede estar vacío', 'error')
+    return
+  }
+
+  if (newName === originalUserData.name.trim()) {
+    return
+  }
+
+  isUpdatingUser.value = true
+
+  try {
+    const { data, error } = await userService.updateUser(userId, { name: newName })
+
+    if (error) {
+      alertStore.showAlert(error, 'error')
+      // Revertir el cambio
+      userName.value = originalUserData.name
+      return
+    }
+
+    if (data) {
+      // Actualizar el usuario en el store
+      authStore.setUser(data)
+      // Actualizar los datos originales
+      originalUserData.name = data.name
+      userName.value = data.name
+      alertStore.showAlert('Perfil actualizado correctamente', 'success', 2000)
+    }
+  } catch {
+    alertStore.showAlert('Error inesperado al actualizar el perfil', 'error')
+    // Revertir el cambio
+    userName.value = originalUserData.name
+  } finally {
+    isUpdatingUser.value = false
+  }
+}
 
 // Cargar configuración de vendedor si aplica
 const loadSellerSettings = async () => {
@@ -229,6 +312,7 @@ const handlePickupToggle = async (newValue: boolean | null) => {
 onMounted(() => {
   if (user.value) {
     userName.value = user.value.name || ''
+    originalUserData.name = user.value.name || ''
   }
   loadSellerSettings()
 })

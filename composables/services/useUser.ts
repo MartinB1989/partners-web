@@ -1,8 +1,14 @@
 import { useApi } from '~/composables/useApi'
 import type { SellerSettings } from '~/types/user'
+import type { User } from '~/types/auth'
 
 export function useUser() {
   const api = useApi()
+
+  const updateUser = async (userId: string, updateData: Partial<Pick<User, 'name'>>) => {
+    const { data, error } = await api.request<User>('PATCH', `/users/${userId}`, updateData)
+    return { data, error }
+  }
 
   /**
    * Obtiene la configuración de vendedor del usuario autenticado
@@ -21,6 +27,7 @@ export function useUser() {
   }
 
   return {
+    updateUser,
     getSellerSettings,
     updateSellerSettings
   }
