@@ -47,6 +47,7 @@
             :price="product.price"
             :stock="product.stock"
             :product-id="Number(route.params.productId)"
+            :seller-settings="product.user?.sellerSettings"
           />
         </v-col>
 

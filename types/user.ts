@@ -18,7 +18,7 @@ export interface User {
   pickupAddresses?: PickupAddress[]
   products?: Product[]
   refreshTokens?: string
-  sellerSettings?: SellerSettings
+  sellerSettings?: SellerSettings | null
 }
 
 export interface SellerSettings {

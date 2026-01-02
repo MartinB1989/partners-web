@@ -1,3 +1,4 @@
+import type { User } from './user'
 export interface ProductSize {
   weight: number
   length: number
@@ -17,6 +18,7 @@ export interface Product {
   images?: ProductImage[]
   categoryIds?: number[]
   productCategories?: ProductCategory[]
+  user?: User
 }
 
 export interface ProductImage {
