@@ -26,6 +26,7 @@
             ref="checkoutFormRef"
             :is-loading-shipping="isLoadingShipping"
             :vendor-seller-settings="vendorInfo?.sellerSettings"
+            :vendor-pickup-point="vendorPickupPoint"
             @shipping-address-confirmed="handleShippingAddressConfirmed"
           />
           <v-divider class="my-4"/>
@@ -75,6 +76,7 @@ import CheckoutSummary from '~/components/checkout/CheckoutSummary.vue';
 import PaymentProcessingModal from '~/components/checkout/PaymentProcessingModal.vue';
 import useOrder from '~/composables/services/useOrder';
 import { useShipping } from '~/composables/services/useShipping';
+import { useUser } from '~/composables/services/useUser';
 import { useAlertStore } from '~/stores/alert';
 import { useCartStore } from '~/stores/cart';
 import { deliveryTypes } from '~/utils/index';
@@ -99,6 +101,7 @@ const route = useRoute();
 const { getCartSummary, currentCartToOrder, vendorCartToOrder, getVendorCartSummary } = useCartToOrder();
 const { createOrder } = useOrder();
 const { quoteShipping } = useShipping();
+const { getPickupPointsBySellerId } = useUser();
 const cartStore = useCartStore();
 
 // Detectar si estamos comprando de un vendedor específico
@@ -119,13 +122,14 @@ const checkoutFormRef = ref<CheckoutFormInstance | null>(null);
 const isLoadingShipping = ref(false);
 const showProcessingModal = ref(false);
 const processingStep = ref<'creating' | 'redirecting'>('creating');
+const vendorPickupPoint = ref<string | null>(null);
 const formIsValid = computed(() => {
   return checkoutFormRef.value?.valid || false;
 });
 
 // Resetear deliveryPrice a 0 cuando se carga la página
 // y redirigir a /cart si el carrito está vacío
-onMounted(() => {
+onMounted(async () => {
   // Verificar si el carrito está vacío
   if (!cartStore.cart || !cartStore.cart.items || cartStore.cart.items.length === 0) {
     router.push('/cart');
@@ -138,6 +142,12 @@ onMounted(() => {
     if (vendorItems.length === 0) {
       router.push('/cart');
       return;
+    }
+
+    // Obtener el punto de retiro del vendedor
+    const { data: pickupPoints, error } = await getPickupPointsBySellerId(vendorId.value);
+    if (!error && pickupPoints && pickupPoints.length > 0) {
+      vendorPickupPoint.value = pickupPoints[0].addressStr;
     }
   }
 

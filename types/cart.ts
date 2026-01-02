@@ -1,6 +1,7 @@
 import type { User } from './auth'
 import type { Product } from './product'
 import type { Address } from './address'
+import type { SellerSettings } from './user'
 
 /**
  * Tipo de entrega para el carrito
@@ -17,6 +18,7 @@ export interface VendorInfo {
   id: string
   name: string
   email: string
+  sellerSettings?: SellerSettings | null
 }
 
 /**

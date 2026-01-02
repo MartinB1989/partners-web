@@ -1,6 +1,7 @@
 import { useApi } from '~/composables/useApi'
 import type { SellerSettings } from '~/types/user'
 import type { User } from '~/types/auth'
+import type { PickupAddress } from '~/types/pickup-address'
 
 export function useUser() {
   const api = useApi()
@@ -26,9 +27,14 @@ export function useUser() {
     return { data, error }
   }
 
+  const getPickupPointsBySellerId = async (sellerId: string) => {
+    const { data, error } = await api.request<PickupAddress[]>('GET', `/pickup-addresses/seller/${sellerId}/active`)
+    return { data, error }
+  }
   return {
     updateUser,
     getSellerSettings,
-    updateSellerSettings
+    updateSellerSettings,
+    getPickupPointsBySellerId
   }
 }

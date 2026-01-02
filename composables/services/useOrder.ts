@@ -11,7 +11,7 @@ const useOrder = () => {
   const { getAnonymousCart } = useCart();
 
   const createOrder = async (order: Order) => {
-    const { data, error } = await api.request('POST', '/orders', order, {
+    const { data, error } = await api.request<Order>('POST', '/orders', order, {
       credentials: 'include', // Importante para enviar y recibir cookies
     });
 

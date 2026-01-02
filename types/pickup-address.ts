@@ -18,6 +18,7 @@ export interface PickupAddress {
   user?: User | string
   latitude?: number
   longitude?: number
+  addressStr?: string
   createdAt: Date
   updatedAt: Date
 } 
