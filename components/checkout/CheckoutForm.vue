@@ -54,8 +54,16 @@
             <template #label>
               <div class="text-subtitle-1 mb-2">Método de entrega</div>
             </template>
-            <v-radio value="delivery" label="Envío a domicilio"/>
-            <v-radio value="pickup" label="Retiro en persona"/>
+            <v-radio
+              v-if="acceptsHomeDelivery"
+              value="delivery"
+              label="Envío a domicilio"
+            />
+            <v-radio
+              v-if="acceptsPickup"
+              value="pickup"
+              label="Retiro en persona"
+            />
           </v-radio-group>
         </v-col>
 
@@ -109,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed, onMounted } from 'vue';
 import type { Address } from '~/types/address';
 import { DeliveryType } from '~/types/cart';
 import ShippingAddressForm from './ShippingAddressForm.vue';
@@ -124,8 +132,14 @@ interface FormData {
   shippingAddress?: Partial<Address>;
 }
 
+interface SellerSettings {
+  acceptsHomeDelivery: boolean;
+  acceptsPickup: boolean;
+}
+
 const props = defineProps<{
   isLoadingShipping: boolean;
+  vendorSellerSettings?: SellerSettings;
 }>();
 
 const emit = defineEmits<{
@@ -144,6 +158,24 @@ const formData = reactive<FormData>({
   notes: '',
   deliveryMethod: '',
   shippingAddress: undefined,
+});
+
+// Computed para determinar los métodos de entrega disponibles
+const acceptsHomeDelivery = computed(() => {
+  return props.vendorSellerSettings?.acceptsHomeDelivery ?? true;
+});
+
+const acceptsPickup = computed(() => {
+  return props.vendorSellerSettings?.acceptsPickup ?? true;
+});
+
+// Seleccionar automáticamente el método de entrega si solo hay uno disponible
+onMounted(() => {
+  if (acceptsHomeDelivery.value && !acceptsPickup.value) {
+    formData.deliveryMethod = 'delivery';
+  } else if (!acceptsHomeDelivery.value && acceptsPickup.value) {
+    formData.deliveryMethod = 'pickup';
+  }
 });
 
 // Actualizar el deliveryType del carrito cuando cambia el método de entrega

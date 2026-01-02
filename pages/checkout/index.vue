@@ -25,6 +25,7 @@
           <CheckoutForm
             ref="checkoutFormRef"
             :is-loading-shipping="isLoadingShipping"
+            :vendor-seller-settings="vendorInfo?.sellerSettings"
             @shipping-address-confirmed="handleShippingAddressConfirmed"
           />
           <v-divider class="my-4"/>
