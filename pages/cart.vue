@@ -10,18 +10,58 @@
 
     <template v-else-if="cartStore.hasItems">
       <v-row>
-        <!-- Columna 1: Lista de productos -->
+        <!-- Columna 1: Lista de productos agrupados por vendedor -->
         <v-col cols="12" md="8" lg="9">
           <div class="cart-items-list">
-            <app-cart-item-card
-              v-for="item in cartStore.cartItems"
-              :key="item.id"
-              :item="item"
-              class="mb-3"
-              @removed="handleItemRemoved"
-              @updated="handleItemUpdated"
-              @refresh-cart="(options) => refreshCart(options)"
-            />
+            <!-- Agrupado por vendedor si existe itemsByVendor -->
+            <template v-if="cartStore.cart?.itemsByVendor && cartStore.cart.itemsByVendor.length > 0">
+              <v-card
+                v-for="vendorGroup in cartStore.cart.itemsByVendor"
+                :key="vendorGroup.vendor.id"
+                variant="outlined"
+                class="mb-4 vendor-group"
+              >
+                <v-card-title class="bg-grey-lighten-4 d-flex align-center">
+                  <v-icon class="mr-2" color="primary">mdi-store</v-icon>
+                  <span>{{ vendorGroup.vendor.name }}</span>
+                </v-card-title>
+
+                <v-card-text class="pa-0">
+                  <div class="vendor-items">
+                    <app-cart-item-card
+                      v-for="item in vendorGroup.items"
+                      :key="item.id"
+                      :item="item"
+                      class="vendor-item"
+                      @removed="handleItemRemoved"
+                      @updated="handleItemUpdated"
+                      @refresh-cart="(options) => refreshCart(options)"
+                    />
+                  </div>
+                </v-card-text>
+
+                <v-card-actions class="bg-grey-lighten-5 justify-end px-4 py-3">
+                  <span class="text-body-2 mr-2">Subtotal vendedor:</span>
+                  <app-currency-display
+                    :amount="vendorGroup.subtotal"
+                    bold
+                  />
+                </v-card-actions>
+              </v-card>
+            </template>
+
+            <!-- Fallback: mostrar items sin agrupar si no existe itemsByVendor -->
+            <template v-else>
+              <app-cart-item-card
+                v-for="item in cartStore.cartItems"
+                :key="item.id"
+                :item="item"
+                class="mb-3"
+                @removed="handleItemRemoved"
+                @updated="handleItemUpdated"
+                @refresh-cart="(options) => refreshCart(options)"
+              />
+            </template>
           </div>
         </v-col>
 
@@ -171,6 +211,24 @@ function handleItemUpdated(updatedItem: CartItem) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.vendor-group {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vendor-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.vendor-item {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.vendor-item:last-child {
+  border-bottom: none;
 }
 
 .sticky-summary {

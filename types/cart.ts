@@ -11,6 +11,24 @@ export enum DeliveryType {
 }
 
 /**
+ * Vendor info for grouping cart items
+ */
+export interface VendorInfo {
+  id: string
+  name: string
+  email: string
+}
+
+/**
+ * Cart items grouped by vendor
+ */
+export interface ItemsByVendor {
+  vendor: VendorInfo
+  items: CartItem[]
+  subtotal: number
+}
+
+/**
  * Interfaz para el carrito de compras
  */
 export interface Cart {
@@ -19,6 +37,7 @@ export interface Cart {
   userId?: string       // Para usuarios registrados
   user?: User
   items: CartItem[]
+  itemsByVendor?: ItemsByVendor[] // Items agrupados por vendedor
   address?: Address     // Dirección opcional para el envío
   addressId?: string
   deliveryType: DeliveryType
