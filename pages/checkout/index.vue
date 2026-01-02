@@ -1,6 +1,23 @@
 <template>
   <v-container>
     <ClientOnly>
+    <!-- Banner informativo cuando se compra de un vendedor específico -->
+    <v-alert
+      v-if="vendorId && vendorInfo"
+      type="info"
+      variant="tonal"
+      class="mb-4"
+      prominent
+    >
+      <template #prepend>
+        <v-icon>mdi-store</v-icon>
+      </template>
+      <div class="text-h6 mb-1">Comprando productos de: {{ vendorInfo.name }}</div>
+      <div class="text-body-2">
+        Solo se procesarán los productos de este vendedor. Los demás productos permanecerán en tu carrito.
+      </div>
+    </v-alert>
+
     <v-row>
       <v-col cols="12" md="8">
         <v-card class="pa-4">
@@ -51,7 +68,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import CheckoutForm from '~/components/checkout/CheckoutForm.vue';
 import CheckoutSummary from '~/components/checkout/CheckoutSummary.vue';
 import PaymentProcessingModal from '~/components/checkout/PaymentProcessingModal.vue';
@@ -77,11 +94,25 @@ interface CheckoutFormInstance {
 
 // Usamos el composable para obtener los datos del carrito
 const router = useRouter();
-const { getCartSummary, currentCartToOrder } = useCartToOrder();
+const route = useRoute();
+const { getCartSummary, currentCartToOrder, vendorCartToOrder, getVendorCartSummary } = useCartToOrder();
 const { createOrder } = useOrder();
 const { quoteShipping } = useShipping();
 const cartStore = useCartStore();
-const cartSummary = ref(getCartSummary());
+
+// Detectar si estamos comprando de un vendedor específico
+const vendorId = ref<string | null>(route.query.vendorId as string || null);
+const vendorInfo = computed(() => {
+  if (!vendorId.value) return null;
+  return cartStore.getVendorInfo(vendorId.value);
+});
+
+// Obtener el resumen del carrito (completo o filtrado por vendedor)
+const cartSummary = ref(
+  vendorId.value
+    ? getVendorCartSummary(vendorId.value)
+    : getCartSummary()
+);
 
 const checkoutFormRef = ref<CheckoutFormInstance | null>(null);
 const isLoadingShipping = ref(false);
@@ -98,6 +129,15 @@ onMounted(() => {
   if (!cartStore.cart || !cartStore.cart.items || cartStore.cart.items.length === 0) {
     router.push('/cart');
     return;
+  }
+
+  // Si estamos comprando de un vendedor específico, verificar que tenga items
+  if (vendorId.value) {
+    const vendorItems = cartStore.getItemsByVendor(vendorId.value);
+    if (vendorItems.length === 0) {
+      router.push('/cart');
+      return;
+    }
   }
 
   cartStore.setDeliveryPrice(0);
@@ -139,11 +179,21 @@ const handleShippingAddressConfirmed = async (shippingAddress: Partial<Address>)
     // Iniciar el loader de envío
     isLoadingShipping.value = true;
 
+    // Obtener los items a cotizar (todos o solo del vendedor)
+    const itemsToQuote = vendorId.value
+      ? cartStore.getItemsByVendor(vendorId.value)
+      : cartStore.cart.items;
+
+    // Calcular el total de los items a cotizar
+    const totalToQuote = vendorId.value
+      ? cartStore.getVendorSubtotal(vendorId.value)
+      : (cartStore.cart.total || 0);
+
     // Cotizar el envío con los datos del carrito y la dirección
     const { data, error } = await quoteShipping(
-      cartStore.cart.items,
+      itemsToQuote,
       shippingAddress,
-      cartStore.cart.total || 0
+      totalToQuote
     );
 
     if (error) {
@@ -196,7 +246,10 @@ const confirmOrder = async () => {
       cartStore.cart.address = shippingAddress as Address;
     }
 
-    const order = currentCartToOrder(email, name, phone, notes);
+    // Crear la orden según si es compra por vendedor o carrito completo
+    const order = vendorId.value
+      ? vendorCartToOrder(vendorId.value, email, name, phone, notes)
+      : currentCartToOrder(email, name, phone, notes);
 
     if (!order) {
       showProcessingModal.value = false;

@@ -17,7 +17,30 @@ export const useCartStore = defineStore('cart', {
   getters: {
     hasItems: (state) => state.itemCount > 0,
     totalItems: (state) => state.itemCount,
-    cartItems: (state) => state.cart?.items || []
+    cartItems: (state) => state.cart?.items || [],
+
+    // Obtener items de un vendedor específico
+    getItemsByVendor: (state) => (vendorId: string) => {
+      if (!state.cart?.items) return []
+      return state.cart.items.filter(item => item.product.userId === vendorId)
+    },
+
+    // Obtener subtotal de un vendedor específico
+    getVendorSubtotal: (state) => (vendorId: string) => {
+      if (!state.cart?.items) return 0
+      return state.cart.items
+        .filter(item => item.product.userId === vendorId)
+        .reduce((sum, item) => sum + item.subTotal, 0)
+    },
+
+    // Obtener información de vendedor desde itemsByVendor
+    getVendorInfo: (state) => (vendorId: string) => {
+      if (!state.cart?.itemsByVendor) return null
+      const vendorGroup = state.cart.itemsByVendor.find(
+        group => group.vendor.id === vendorId
+      )
+      return vendorGroup?.vendor || null
+    }
   },
 
   actions: {

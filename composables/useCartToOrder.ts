@@ -96,8 +96,8 @@ export function useCartToOrder() {
         name: item.product.title,
         price: item.product.price,
         quantity: item.quantity,
-        image: item.product.images && item.product.images.length > 0 
-          ? item.product.images[0].url 
+        image: item.product.images && item.product.images.length > 0
+          ? item.product.images[0].url
           : undefined
       })),
       subTotal: cartStore.cart.total || 0,
@@ -105,9 +105,111 @@ export function useCartToOrder() {
     }
   }
 
+  /**
+   * Transforma solo los productos de un vendedor específico en una orden
+   * @param vendorId ID del vendedor
+   * @param email Email del comprador
+   * @param name Nombre del comprador
+   * @param phone Teléfono opcional del comprador
+   * @param notes Notas opcionales para la orden
+   * @returns La orden generada solo con productos del vendedor o null si no hay items del vendedor
+   */
+  const vendorCartToOrder = (
+    vendorId: string,
+    email?: string,
+    name?: string,
+    phone?: string,
+    notes?: string
+  ): Order | null => {
+    if (!cartStore.cart) {
+      return null
+    }
+
+    // Filtrar items del vendedor específico
+    const vendorItems = cartStore.cart.items.filter(
+      item => item.product.userId === vendorId
+    )
+
+    if (vendorItems.length === 0) {
+      return null
+    }
+
+    // Calcular el total solo con items del vendedor
+    const vendorTotal = vendorItems.reduce((sum, item) => sum + item.subTotal, 0)
+
+    // Crear los items de la orden a partir de los items del vendedor
+    const orderItems: OrderItem[] = vendorItems.map(item => ({
+      productId: item.productId,
+      title: item.product.title,
+      unitPrice: item.product.price,
+      subTotal: item.subTotal,
+      quantity: item.quantity,
+      imageUrl: item.product.images && item.product.images.length > 0
+        ? item.product.images[0].url
+        : undefined
+    }))
+
+    // Crear la orden con los datos del vendedor
+    const order: Order = {
+      // Solo incluir addressId y address si existen en el carrito
+      ...(cartStore.cart.addressId ? { addressId: cartStore.cart.addressId } : {}),
+      ...(cartStore.cart.address ? { address: cartStore.cart.address } : {}),
+      email: email || '',
+      name: name || '',
+      phone,
+      total: vendorTotal,
+      deliveryType: cartStore.cart.deliveryType,
+      // Solo incluir deliveryPrice si existe en el carrito (cuando es envío a domicilio)
+      ...(cartStore.cart.deliveryPrice !== undefined ? { deliveryPrice: cartStore.cart.deliveryPrice } : {}),
+      notes,
+      items: orderItems
+    }
+
+    return order
+  }
+
+  /**
+   * Obtiene un resumen del carrito filtrado por vendedor para mostrar en el checkout
+   * @param vendorId ID del vendedor
+   * @returns Información resumida del carrito del vendedor o null si no hay items del vendedor
+   */
+  const getVendorCartSummary = (vendorId: string) => {
+    if (!cartStore.cart || !cartStore.cart.items || cartStore.cart.items.length === 0) {
+      return null
+    }
+
+    // Filtrar items del vendedor
+    const vendorItems = cartStore.cart.items.filter(
+      item => item.product.userId === vendorId
+    )
+
+    if (vendorItems.length === 0) {
+      return null
+    }
+
+    // Calcular subtotal del vendedor
+    const vendorSubTotal = vendorItems.reduce((sum, item) => sum + item.subTotal, 0)
+
+    return {
+      items: vendorItems.map(item => ({
+        id: item.productId,
+        name: item.product.title,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.images && item.product.images.length > 0
+          ? item.product.images[0].url
+          : undefined
+      })),
+      subTotal: vendorSubTotal,
+      deliveryType: cartStore.cart.deliveryType || ''
+    }
+  }
+
   return {
     cartToOrder,
     currentCartToOrder,
-    getCartSummary
+    getCartSummary,
+    vendorCartToOrder,
+    getVendorCartSummary
   }
 } 

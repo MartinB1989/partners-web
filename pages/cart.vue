@@ -40,12 +40,21 @@
                   </div>
                 </v-card-text>
 
-                <v-card-actions class="bg-grey-lighten-5 justify-end px-4 py-3">
-                  <span class="text-body-2 mr-2">Subtotal vendedor:</span>
-                  <app-currency-display
-                    :amount="vendorGroup.subtotal"
-                    bold
-                  />
+                <v-card-actions class="bg-grey-lighten-5 justify-space-between px-4 py-3">
+                  <div class="d-flex align-center">
+                    <span class="text-body-2 mr-2">Subtotal vendedor:</span>
+                    <app-currency-display
+                      :amount="vendorGroup.subtotal"
+                      bold
+                    />
+                  </div>
+                  <v-btn
+                    color="primary"
+                    variant="elevated"
+                    @click="goToCheckoutForVendor(vendorGroup.vendor.id)"
+                  >
+                    Comprar productos de este vendedor
+                  </v-btn>
                 </v-card-actions>
               </v-card>
             </template>
@@ -95,6 +104,8 @@
                 <span v-else class="text-h6 font-weight-bold">$0</span>
               </div>
 
+              <!-- Botón comentado temporalmente - usar botones por vendedor -->
+              <!--
               <v-btn
                 color="primary"
                 variant="elevated"
@@ -106,6 +117,7 @@
               >
                 Proceder al pago
               </v-btn>
+              -->
             </v-card-item>
           </v-card>
         </v-col>
@@ -136,11 +148,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCartStore } from '~/stores/cart'
 import { useCart } from '~/composables/services/useCart'
 import type { CartItem, Cart } from '~/types/cart'
 import AppCurrencyDisplay from '~/components/app/CurrencyDisplay.vue'
 
+const router = useRouter()
 const cartStore = useCartStore()
 const { getAnonymousCart } = useCart()
 const loading = ref(false)
@@ -193,16 +207,24 @@ function handleItemRemoved(itemId: string) {
 // Manejar la actualización de un item
 function handleItemUpdated(updatedItem: CartItem) {
   if (!cartStore.cart) return
-  
+
   // Actualizar el item específico en el carrito local
-  const updatedCart = { 
+  const updatedCart = {
     ...cartStore.cart,
-    items: cartStore.cartItems.map(item => 
+    items: cartStore.cartItems.map(item =>
       item.id === updatedItem.id ? updatedItem : item
     )
   } as Cart
-  
+
   cartStore.setCart(updatedCart)
+}
+
+// Redirigir al checkout con filtro por vendedor
+function goToCheckoutForVendor(vendorId: string) {
+  router.push({
+    path: '/checkout',
+    query: { vendorId }
+  })
 }
 </script>
 
