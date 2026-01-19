@@ -18,6 +18,8 @@ export default defineNuxtConfig({
       zipnovaAccountId: process.env.NUXT_ZIPNOVA_ACCOUNT_ID,
       zipnovaOriginId: process.env.NUXT_ZIPNOVA_ORIGIN_ID,
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      mpLinkAuthSplit: process.env.NUXT_MP_SPLIT_LINK,
+      mpUnlinkAuthSplit: process.env.NUXT_MP_SPLIT_UNLINK
     }
   },
 

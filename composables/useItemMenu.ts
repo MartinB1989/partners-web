@@ -49,6 +49,12 @@ export function useItemMenu() {
       icon: 'mdi-account', 
       to: '/admin/user',
       roles: adminAndProductor
+    },
+    {
+      title: 'Metodos de pago', 
+      icon: 'mdi-credit-card-settings-outline',
+      to: '/admin/payment-methods',
+      roles: adminAndProductor
     }
   ])
   
