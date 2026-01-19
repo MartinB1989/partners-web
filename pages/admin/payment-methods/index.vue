@@ -2,66 +2,67 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center align-start mb-4 ga-3">
-          <div>
-            <h1 class="text-h4 mb-2">Métodos de Pago - Vinculaciones</h1>
-            <p class="text-body-2 text-medium-emphasis">
+        <!-- Header Section -->
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center align-start mb-6 ga-3">
+          <div class="flex-grow-1">
+            <h1 class="text-h4 font-weight-bold mb-2">Métodos de Pago - Vinculaciones</h1>
+            <p class="text-body-1 text-medium-emphasis">
               Vincula tus métodos de pago para poder recibir pagos de tus clientes.
               Al vincular Mercado Pago, podrás procesar pagos de forma segura y recibir el dinero directamente en tu cuenta.
             </p>
           </div>
-          <div class="d-flex flex-column flex-sm-row ga-2 buttons-container">
-            <v-btn
-              variant="outlined"
-              prepend-icon="mdi-arrow-left"
-              class="action-btn"
-              to="/admin/panel"
-            >
-              Atrás
-            </v-btn>
-          </div>
+          <v-btn
+            variant="outlined"
+            prepend-icon="mdi-arrow-left"
+            to="/admin/panel"
+            class="flex-sm-shrink-0"
+          >
+            Atrás
+          </v-btn>
         </div>
 
+        <!-- Payment Methods Grid -->
         <v-row>
-          <v-col cols="12" md="6" lg="4">
+          <v-col cols="12" sm="6" md="4">
             <v-card
-              class="payment-method-card"
               elevation="2"
-              :class="{ 'linked': isMercadoPagoLinked }"
+              :border="isMercadoPagoLinked ? 'md success' : undefined"
+              hover
+              class="h-100"
             >
-              <v-card-text class="d-flex flex-column align-center pa-6">
-                <div class="logo-container mb-4">
+              <v-card-text class="d-flex flex-column align-center pa-6 text-center">
+                <!-- Logo -->
+                <v-sheet
+                  class="d-flex align-center justify-center mb-6"
+                  color="transparent"
+                  height="100"
+                  width="100%"
+                >
                   <v-img
                     src="/static/images/mercadopago-logo.webp"
                     alt="Mercado Pago"
                     max-width="200"
                     contain
                   />
-                </div>
+                </v-sheet>
 
-                <h3 class="text-h6 mb-2">Mercado Pago</h3>
-                <p class="text-body-2 text-center text-medium-emphasis mb-4">
+                <!-- Title and Description -->
+                <h3 class="text-h6 font-weight-bold mb-2">Mercado Pago</h3>
+                <p class="text-body-2 text-medium-emphasis mb-6">
                   Acepta pagos con tarjetas de crédito, débito y otros medios de pago
                 </p>
 
+                <!-- Status Chip -->
                 <v-chip
-                  v-if="isMercadoPagoLinked"
-                  color="success"
-                  prepend-icon="mdi-check-circle"
-                  class="mb-4"
+                  :color="isMercadoPagoLinked ? 'success' : 'warning'"
+                  :prepend-icon="isMercadoPagoLinked ? 'mdi-check-circle' : 'mdi-alert-circle'"
+                  variant="flat"
+                  class="mb-6"
                 >
-                  Vinculado
+                  {{ isMercadoPagoLinked ? 'Vinculado' : 'No vinculado' }}
                 </v-chip>
 
-                <v-chip
-                  v-else
-                  color="warning"
-                  prepend-icon="mdi-alert-circle"
-                  class="mb-4"
-                >
-                  No vinculado
-                </v-chip>
-
+                <!-- Action Button -->
                 <v-btn
                   v-if="!isMercadoPagoLinked"
                   color="primary"
@@ -92,18 +93,21 @@
       </v-col>
     </v-row>
 
-    <!-- Modal de confirmación para desvincular -->
-    <v-dialog v-model="showUnlinkDialog" max-width="500px">
+    <!-- Unlink Confirmation Dialog -->
+    <v-dialog v-model="showUnlinkDialog" max-width="500">
       <v-card>
-        <v-card-title class="text-h5">Confirmar desvinculación</v-card-title>
-        <v-card-text>
+        <v-card-title class="text-h5 font-weight-bold">
+          Confirmar desvinculación
+        </v-card-title>
+
+        <v-card-text class="text-body-1">
           ¿Estás seguro de que deseas desvincular tu cuenta de Mercado Pago?
           No podrás recibir pagos hasta que vuelvas a vincular una cuenta.
         </v-card-text>
-        <v-card-actions>
-          <v-spacer/>
+
+        <v-card-actions class="px-4 pb-4">
+          <v-spacer />
           <v-btn
-            color="primary"
             variant="text"
             :disabled="isUnlinking"
             @click="showUnlinkDialog = false"
@@ -112,9 +116,8 @@
           </v-btn>
           <v-btn
             color="error"
-            variant="text"
+            variant="flat"
             :loading="isUnlinking"
-            :disabled="isUnlinking"
             @click="unlinkMercadoPago"
           >
             Desvincular
@@ -181,46 +184,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.buttons-container {
-  width: 100%;
-}
-
-@media (min-width: 600px) {
-  .buttons-container {
-    width: auto;
-  }
-}
-
-.action-btn {
-  width: 100%;
-}
-
-@media (min-width: 600px) {
-  .action-btn {
-    width: auto;
-  }
-}
-
-.payment-method-card {
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.payment-method-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
-}
-
-.payment-method-card.linked {
-  border-color: rgb(var(--v-theme-success));
-}
-
-.logo-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100px;
-}
-</style>
