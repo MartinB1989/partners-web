@@ -201,6 +201,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useAlertStore } from '~/stores/alert'
+import { useMercadoPago } from '~/composables/services/useMercadoPago'
 
 definePageMeta({
   layout: 'admin',
@@ -211,6 +212,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const alertStore = useAlertStore()
 const runtimeConfig = useRuntimeConfig()
+const { getLinkageStatus, unlinkAccount } = useMercadoPago()
 
 const isLinked = ref(false)
 const loading = ref(true)
@@ -250,21 +252,28 @@ async function initiateLinking() {
 
 /**
  * Handle account unlinking
- * Opens the MercadoPago unlink authorization URL
+ * First unlinks the account via API, then redirects to MercadoPago for final authorization
  */
 async function handleUnlinkAccount() {
+  unlinking.value = true
   try {
-    unlinking.value = true
+    // Step 1: Call API to unlink account
+    const { data, error } = await unlinkAccount()
 
-    // Check if the unlinking URL is configured
-    if (!mpUnlinkingUrl.value) {
-      alertStore.showAlert('URL de desvinculación no configurada. Verifica la variable NUXT_MP_SPLIT_UNLINK en .env', 'error')
-      unlinking.value = false
+    if (error) {
+      console.error('Error al desvincular cuenta:', error)
+      alertStore.showAlert('Error al desvincular la cuenta. Intenta nuevamente', 'error')
       return
     }
 
-    // Show alert message
-    alertStore.showAlert('Serás redirigido a MercadoPago para desvincular la cuenta', 'info')
+    // Step 2: Check if the unlinking URL is configured
+    if (!mpUnlinkingUrl.value) {
+      alertStore.showAlert('URL de desvinculación no configurada. Verifica la variable NUXT_MP_SPLIT_UNLINK en .env', 'error')
+      return
+    }
+
+    // Step 3: Show success and redirect to MercadoPago
+    alertStore.showAlert(data?.message || 'Cuenta desvinculada. Serás redirigido a MercadoPago', 'success')
 
     // Wait 2 seconds to give user time to read the toast
     await new Promise(resolve => setTimeout(resolve, 2000))
@@ -273,8 +282,10 @@ async function handleUnlinkAccount() {
     window.open(mpUnlinkingUrl.value, '_blank')
 
     showConfirmModal.value = false
-  } catch {
-    alertStore.showAlert('Error al iniciar la desvinculación', 'error')
+    isLinked.value = false
+  } catch (error) {
+    console.error('Error al desvincular cuenta:', error)
+    alertStore.showAlert('Error al desvincular la cuenta. Intenta nuevamente', 'error')
   } finally {
     unlinking.value = false
   }
@@ -289,19 +300,22 @@ async function checkLinkageStatus() {
     return
   }
 
+  loading.value = true
   try {
-    // TODO: Implement when backend endpoint is ready
-    // const { data, error } = await getLinkageStatus(userId.value)
-    // if (error) {
-    //   alertStore.showAlert('Error al verificar la vinculación', 'error')
-    //   return
-    // }
-    // isLinked.value = data?.linked || false
+    const { data, error } = await getLinkageStatus()
 
-    // Mock data for testing UI
-    isLinked.value = false
-  } catch {
-    alertStore.showAlert('Error al verificar la vinculación', 'error')
+    if (error) {
+      console.error('Error al verificar la vinculación:', error)
+      alertStore.showAlert('Error al verificar la vinculación. Vuelve a cargar la página', 'error')
+      return
+    }
+
+    if (data) {
+      isLinked.value = data.hasIntegration
+    }
+  } catch (error) {
+    console.error('Error al verificar la vinculación:', error)
+    alertStore.showAlert('Error al verificar la vinculación. Vuelve a cargar la página', 'error')
   } finally {
     loading.value = false
   }

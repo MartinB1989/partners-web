@@ -107,6 +107,8 @@
 </template>
 
 <script setup lang="ts">
+import { useMercadoPago } from '~/composables/services/useMercadoPago'
+import { useAlertStore } from '~/stores/alert'
 
 definePageMeta({
   layout: 'admin',
@@ -114,6 +116,8 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const { linkAccount } = useMercadoPago()
+const alertStore = useAlertStore()
 
 // Estados
 const loading = ref(false)
@@ -136,24 +140,23 @@ const verifyMercadoPagoIntegration = async () => {
   errorMessage.value = ''
 
   try {
-    // TODO: Cuando el endpoint esté disponible, implementar la llamada a la API
-    // const response = await useMercadoPago().verifyIntegration(authorizationCode.value)
+    const { data, error: apiError } = await linkAccount(authorizationCode.value)
 
-    // Simulación temporal para desarrollo (remover cuando el endpoint esté listo)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // Simular respuesta exitosa (cambiar esto por la llamada real)
-    const simulateSuccess = false // Cambiar a false para probar el estado de error
-
-    if (simulateSuccess) {
-      success.value = true
-    } else {
-      throw new Error('Error en la verificación')
+    if (apiError) {
+      console.error('Error al vincular cuenta de Mercado Pago:', apiError)
+      error.value = true
+      errorMessage.value = 'No se pudo completar la vinculación con Mercado Pago. Por favor, intenta nuevamente.'
+      return
     }
 
+    if (data) {
+      success.value = true
+      alertStore.showAlert(data.message || 'Cuenta vinculada exitosamente', 'success')
+    }
   } catch (err) {
+    console.error('Error al vincular cuenta de Mercado Pago:', err)
     error.value = true
-    errorMessage.value = (err as Error)?.message || 'Error desconocido al verificar la integración'
+    errorMessage.value = 'Error desconocido al verificar la integración'
   } finally {
     loading.value = false
   }

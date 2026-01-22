@@ -1,30 +1,26 @@
-import type { MercadoPagoLinkageStatus, MercadoPagoLinkingResponse, MercadoPagoUnlinkingResponse } from '~/types/mercadopago'
+import type { MercadoPagoLinkageStatusResponse, MercadoPagoUnlinkResponse, MercadoPagoLinkResponse } from '~/types/mercadopago'
 
-/**
- * MercadoPago API service composable
- * Handles MercadoPago account linking/unlinking operations
- */
 export const useMercadoPago = () => {
   const { request } = useApi()
 
-  const getLinkageStatus = async (userId: string) => {
-    return await request<MercadoPagoLinkageStatus>('GET', `/mercadopago/status/${userId}`)
+  const getLinkageStatus = async () => {
+    const { data, error } = await request<MercadoPagoLinkageStatusResponse>('GET', `/split-integrations/mercadopago/status`)
+    return { data, error }
   }
 
-  const unlinkAccount = async (userId: string) => {
-    return await request<MercadoPagoUnlinkingResponse>('POST', `/mercadopago/unlink/${userId}`)
+  const unlinkAccount = async () => {
+    const { data, error } = await request<MercadoPagoUnlinkResponse>('DELETE', `/split-integrations/mercadopago/unlink`)
+    return { data, error }
   }
 
-  const handleCallback = async (code: string, state: string) => {
-    return await request<MercadoPagoLinkingResponse>('POST', '/mercadopago/callback', {
-      code,
-      state
-    })
+  const linkAccount = async (code: string) => {
+    const { data, error } = await request<MercadoPagoLinkResponse>('GET', `/split-integrations/mercadopago?code=${code}`)
+    return { data, error }
   }
 
   return {
     getLinkageStatus,
     unlinkAccount,
-    handleCallback
+    linkAccount
   }
 }
