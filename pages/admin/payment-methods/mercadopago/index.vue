@@ -162,6 +162,17 @@
                 <v-icon start>mdi-link</v-icon>
                 <span>Vincular ahora</span>
               </v-btn>
+
+              <div class="text-body-2 text-medium-emphasis mt-4">
+                ¿No puedes vincular tu cuenta de Mercado Pago?
+                <a
+                  href="#"
+                  class="text-primary text-decoration-underline"
+                  @click.prevent="showHelpModal = true"
+                >
+                  Haz click aquí
+                </a>
+              </div>
             </div>
           </v-card-text>
         </v-card>
@@ -177,6 +188,11 @@
         v-model:show="showConfirmModal"
         :unlinking="unlinking"
         @confirm="handleUnlinkAccount"
+      />
+
+      <!-- Modal de ayuda para vinculación -->
+      <AdminPaymentMethodsMercadopagoLinkingHelpModal
+        v-model:show="showHelpModal"
       />
     </v-row>
   </v-container>
@@ -201,6 +217,7 @@ const loading = ref(true)
 const linking = ref(false)
 const unlinking = ref(false)
 const showConfirmModal = ref(false)
+const showHelpModal = ref(false)
 
 const userId = computed(() => authStore.getUserId)
 const mpLinkingUrl = computed(() => runtimeConfig.public.mpLinkAuthSplit)
