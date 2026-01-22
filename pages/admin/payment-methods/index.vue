@@ -26,7 +26,6 @@
           <v-col cols="12" sm="6" md="4">
             <v-card
               elevation="2"
-              :border="isMercadoPagoLinked ? 'md success' : undefined"
               hover
               class="h-100"
             >
@@ -52,39 +51,15 @@
                   Acepta pagos con tarjetas de crédito, débito y otros medios de pago
                 </p>
 
-                <!-- Status Chip -->
-                <v-chip
-                  :color="isMercadoPagoLinked ? 'success' : 'warning'"
-                  :prepend-icon="isMercadoPagoLinked ? 'mdi-check-circle' : 'mdi-alert-circle'"
-                  variant="flat"
-                  class="mb-6"
-                >
-                  {{ isMercadoPagoLinked ? 'Vinculado' : 'No vinculado' }}
-                </v-chip>
-
                 <!-- Action Button -->
                 <v-btn
-                  v-if="!isMercadoPagoLinked"
                   color="primary"
                   block
                   size="large"
-                  prepend-icon="mdi-link-variant"
+                  prepend-icon="mdi-eye"
                   to="/admin/payment-methods/mercadopago"
                 >
-                  Vincular cuenta
-                </v-btn>
-
-                <v-btn
-                  v-else
-                  color="error"
-                  variant="outlined"
-                  block
-                  size="large"
-                  prepend-icon="mdi-link-variant-off"
-                  :loading="isUnlinking"
-                  @click="showUnlinkDialog = true"
-                >
-                  Desvincular
+                  Ver
                 </v-btn>
               </v-card-text>
             </v-card>
@@ -92,95 +67,12 @@
         </v-row>
       </v-col>
     </v-row>
-
-    <!-- Unlink Confirmation Dialog -->
-    <v-dialog v-model="showUnlinkDialog" max-width="500">
-      <v-card>
-        <v-card-title class="text-h5 font-weight-bold">
-          Confirmar desvinculación
-        </v-card-title>
-
-        <v-card-text class="text-body-1">
-          ¿Estás seguro de que deseas desvincular tu cuenta de Mercado Pago?
-          No podrás recibir pagos hasta que vuelvas a vincular una cuenta.
-        </v-card-text>
-
-        <v-card-actions class="px-4 pb-4">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            :disabled="isUnlinking"
-            @click="showUnlinkDialog = false"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            :loading="isUnlinking"
-            @click="unlinkMercadoPago"
-          >
-            Desvincular
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { useAlertStore } from '~/stores/alert'
-
 definePageMeta({
   layout: 'admin',
-})
-
-const alertStore = useAlertStore()
-
-const isMercadoPagoLinked = ref<boolean>(false)
-const isUnlinking = ref<boolean>(false)
-const showUnlinkDialog = ref<boolean>(false)
-
-// Función para verificar si Mercado Pago está vinculado
-const checkMercadoPagoStatus = async (): Promise<void> => {
-  try {
-    // TODO: Implementar llamada al backend para verificar vinculación
-    // const { data, error } = await usePaymentMethods().getMercadoPagoStatus()
-    // isMercadoPagoLinked.value = data?.isLinked || false
-
-    // Por ahora, simulamos que no está vinculado
-    isMercadoPagoLinked.value = false
-  } catch (error) {
-    console.error('Error al verificar estado de Mercado Pago:', error)
-  }
-}
-
-// Función para desvincular Mercado Pago
-const unlinkMercadoPago = async (): Promise<void> => {
-  isUnlinking.value = true
-  try {
-    // TODO: Implementar llamada al backend para desvincular
-    // const { error } = await usePaymentMethods().unlinkMercadoPago()
-    // if (error) {
-    //   alertStore.showAlert('Error al desvincular Mercado Pago', 'error')
-    // } else {
-    //   alertStore.showAlert('Mercado Pago desvinculado correctamente', 'success')
-    //   isMercadoPagoLinked.value = false
-    // }
-
-    alertStore.showAlert('Funcionalidad en desarrollo', 'info')
-    showUnlinkDialog.value = false
-  } catch (error) {
-    console.error('Error al desvincular Mercado Pago:', error)
-    alertStore.showAlert('Error al desvincular Mercado Pago', 'error')
-  } finally {
-    isUnlinking.value = false
-  }
-}
-
-// Verificar estado al montar el componente
-onMounted(() => {
-  checkMercadoPagoStatus()
 })
 </script>
 
