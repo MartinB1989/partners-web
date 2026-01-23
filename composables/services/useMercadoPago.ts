@@ -9,7 +9,7 @@ export const useMercadoPago = () => {
   }
 
   const unlinkAccount = async () => {
-    const { data, error } = await request<MercadoPagoUnlinkResponse>('DELETE', `/split-integrations/mercadopago/unlink`)
+    const { data, error } = await request<MercadoPagoUnlinkResponse>('DELETE', `/split-integrations/mercadopago`)
     return { data, error }
   }
 
